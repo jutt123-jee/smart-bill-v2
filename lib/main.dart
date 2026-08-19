@@ -1,349 +1,281 @@
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const SmartMeterApp());
-}
-
-class SmartMeterApp extends StatelessWidget {
-  const SmartMeterApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Smart Utility Meter App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
-        fontFamily: 'Roboto',
-      ),
-      home: const MainHomeScreen(),
-    );
-  }
-}
-
-class MainHomeScreen extends StatefulWidget {
-  const MainHomeScreen({Key? key}) : super(key: key);
-
-  @override
-  State<MainHomeScreen> createState() => _MainHomeScreenState();
-}
-
-class _MainHomeScreenState extends State<MainHomeScreen> {
-  // 15th Feature: Top Line Meter Selector
-  String selectedMeter = 'All Meters';
-  int _currentIndex = 0;
-
-  // Sample Budget Data
-  double totalBudget = 30000.0;
-  double currentBill = 17600.0;
-
-  final List<String> meterList = [
-    'All Meters',
-    'Meter 1 (Ground Floor)',
-    'Meter 2 (Upper Floor)',
-    'Meter 3 (Motor/Heavy)',
-    'Gas Meter',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    double remainingBalance = totalBudget - currentBill;
-
-    return Scaffold(
-      // TOP BAR WITH HAMBURGER MENU & TOP LINE METER DROP-DOWN
-      appBar: AppBar(
-        backgroundColor: Colors.teal.shade800,
-        elevation: 2,
-        title: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selectedMeter,
-            dropdownColor: Colors.teal.shade900,
-            icon: const Icon(Icons.arrow_drop_down_circle, color: Colors.amber),
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedMeter = newValue!;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('فلٹر تبدیل کر دیا گیا: $selectedMeter')),
-              );
-            },
-            items: meterList.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_active, color: Colors.amber),
-            onPressed: () {},
-          )
-        ],
-      ),
-
-      // SIDE DRAWER MENU (TOP MENU - 7 OPTIONS)
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Colors.teal.shade800),
-              accountName: const Text("Smart Meter Control", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              accountEmail: Text("Selected: $selectedMeter", style: const TextStyle(color: Colors.amber)),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.electric_meter, color: Colors.teal, size: 36),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.file_download, color: Colors.teal),
-              title: const Text('01. Export & Reports (ڈیٹا ڈاؤن لوڈ)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.record_voice_over, color: Colors.teal),
-              title: const Text('02. Voice & Sound Alerts (وائس سیٹنگ)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_note, color: Colors.teal),
-              title: const Text('03. Meter Names Management (نام تبدیل کریں)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.event_available, color: Colors.teal),
-              title: const Text('04. Bill Expire & Due Dates (تاریخیں)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings, color: Colors.teal),
-              title: const Text('05. Main Settings & Tariff (ریٹ و سلیب)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.speed, color: Colors.teal),
-              title: const Text('06. Limit & Budget Control (حدود)'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.cloud_sync, color: Colors.teal),
-              title: const Text('07. Backup & Restore (ڈیٹا محفوظ کریں)'),
-              onTap: () {},
-            ),
-          ],
-        ),
-      ),
-
-      // MAIN BODY BASED ON SELECTED BOTTOM TAB
-      body: _buildScreenContent(remainingBalance),
-
-      // FLOATING ACTION BUTTON (QUICK READING)
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _showQuickReadingDialog();
-        },
-        backgroundColor: Colors.amber.shade700,
-        icon: const Icon(Icons.add_a_photo, color: Colors.black),
-        label: const Text("➕ Quick Reading", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      ),
-
-      // BOTTOM NAVIGATION BAR (5 BUTTONS)
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.teal.shade800,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.electric_bolt), label: 'Electricity'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: 'Gas Meter'),
-          BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Analytics'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-        ],
-      ),
-    );
-  }
-
-  // BUILD CONTENT SWITCHER
-  Widget _buildScreenContent(double remainingBalance) {
-    if (_currentIndex == 0) {
-      return _buildDashboard(remainingBalance);
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Meter App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #00695c;
+      --primary-dark: #004d40;
+      --accent: #ffa000;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #333333;
     }
-    return Center(
-      child: Text(
-        "Screen: ${_getTabTitle(_currentIndex)}\n(Filter Active: $selectedMeter)",
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
-      ),
-    );
-  }
 
-  String _getTabTitle(int index) {
-    switch (index) {
-      case 1: return "Electricity Meters Detail";
-      case 2: return "Gas Meter Detail";
-      case 3: return "Analytics & Monthly History";
-      case 4: return "Active Alerts & Voice Reminders";
-      default: return "Dashboard";
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding-bottom: 90px;
+      direction: rtl;
     }
-  }
 
-  // DASHBOARD DESIGN
-  Widget _buildDashboard(double remainingBalance) {
-    bool isWithinBudget = remainingBalance >= 0;
+    /* Top Bar Header */
+    .app-bar {
+      background: var(--primary-dark);
+      color: white;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // SMART RECOMMENDATION BANNER
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade100,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amber.shade800),
-            ),
-            child: Row(
-              children: const [
-                Icon(Icons.lightbulb, color: Colors.amber),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "سمارٹ تجویز: میٹر 1 کے 280 یونٹس ہو چکے ہیں۔ بوجھ دوسرے میٹر پر شفٹ کریں!",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+    .app-bar-left { display: flex; align-items: center; gap: 12px; }
+    .icon-btn { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
 
-          // TOP BALANCE OVERVIEW CARD
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Total Budget: PKR ${totalBudget.toStringAsFixed(0)}", style: const TextStyle(color: Colors.grey)),
-                      Text("Est. Bill: PKR ${currentBill.toStringAsFixed(0)}", style: const TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                  const Divider(height: 20),
-                  const Text("REMAINING BALANCE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  const SizedBox(height: 5),
-                  Text(
-                    "PKR ${remainingBalance.toStringAsFixed(0)}",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: isWithinBudget ? Colors.green.shade700 : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
+    select.meter-dropdown {
+      background: var(--primary);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
 
-          Text(
-            "Meter Status ($selectedMeter)",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black80),
-          ),
-          const SizedBox(height: 10),
+    /* Side Drawer Menu */
+    .drawer-overlay {
+      position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.5); display: none; z-index: 200;
+    }
+    .drawer {
+      position: fixed; top: 0; bottom: 0; right: -280px; width: 280px;
+      background: white; transition: right 0.3s ease; z-index: 201;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+    }
+    .drawer.open { right: 0; }
+    .drawer-header { background: var(--primary-dark); color: white; padding: 20px 15px; }
+    .drawer-menu { list-style: none; padding: 0; margin: 0; }
+    .drawer-menu li {
+      padding: 12px 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; font-size: 13px; cursor: pointer;
+    }
 
-          // METER CARDS LIST
-          if (selectedMeter == 'All Meters' || selectedMeter.contains('Meter 1'))
-            _buildMeterCard("Meter 1 (Ground)", "280 / 300 Units", "PKR 8,200", Colors.orange, true),
-          if (selectedMeter == 'All Meters' || selectedMeter.contains('Meter 2'))
-            _buildMeterCard("Meter 2 (Upper)", "140 / 300 Units", "PKR 4,100", Colors.green, false),
-          if (selectedMeter == 'All Meters' || selectedMeter.contains('Meter 3'))
-            _buildMeterCard("Meter 3 (Motor)", "190 / 300 Units", "PKR 5,300", Colors.green, false),
-          if (selectedMeter == 'All Meters' || selectedMeter.contains('Gas'))
-            _buildMeterCard("Gas Meter", "1.2 Hm3 (Slab 1)", "PKR 1,200", Colors.green, false),
-        ],
-      ),
-    );
-  }
+    /* Main Content Containers */
+    .container { padding: 15px; max-width: 500px; margin: 0 auto; }
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
 
-  // METER CARD WIDGET
-  Widget _buildMeterCard(String title, String units, String bill, Color statusColor, bool hasWarning) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.2),
-          child: Icon(Icons.speed, color: statusColor),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Slab Status: $units"),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAlignment.end,
-          children: [
-            Text(bill, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.teal)),
-            if (hasWarning)
-              const Text("⚠️ Limit Near", style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
+    /* Banner & Cards */
+    .smart-banner {
+      background: #fff8e1; border: 1px solid #ffe082; color: #8c6b00;
+      padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: bold; margin-bottom: 15px;
+    }
+    .card {
+      background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;
+    }
+    .balance-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 10px; }
+    .balance-amount { font-size: 26px; font-weight: bold; color: #2e7d32; text-align: center; margin: 8px 0; }
 
-  // QUICK READING DIALOG
-  void _showQuickReadingDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Quick Reading Entry ($selectedMeter)"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Enter Reading Value",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.camera_alt),
-              label: const Text("Capture Meter Image"),
-            )
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ریڈنگ کامیابی سے محفوظ کر لی گئی ہے!')),
-              );
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
-}
+    .meter-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; background: white;
+    }
+    .meter-info { display: flex; align-items: center; gap: 10px; }
+    .meter-icon { width: 36px; height: 36px; border-radius: 50%; background: #e0f2f1; color: var(--primary); display: flex; align-items: center; justify-content: center; }
+
+    /* Floating Action Button */
+    .fab {
+      position: fixed; bottom: 70px; left: 15px;
+      background: var(--accent); color: black; border: none; padding: 12px 18px;
+      border-radius: 25px; font-weight: bold; display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 90;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; display: flex; justify-content: space-around;
+      padding: 8px 0; border-top: 1px solid #ddd; z-index: 100;
+    }
+    .nav-item { text-align: center; font-size: 10px; color: #777; cursor: pointer; flex: 1; }
+    .nav-item.active { color: var(--primary); font-weight: bold; }
+    .nav-item i { font-size: 18px; margin-bottom: 3px; display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <div class="app-bar">
+    <div class="app-bar-left">
+      <button class="icon-btn" onclick="toggleDrawer()"><i class="fa-solid fa-bars"></i></button>
+      <select class="meter-dropdown" id="meterFilter" onchange="filterMeters()">
+        <option value="all">All Meters</option>
+        <option value="meter1">Meter 1 (Ground Floor)</option>
+        <option value="meter2">Meter 2 (Upper Floor)</option>
+        <option value="meter3">Meter 3 (Motor/Heavy)</option>
+        <option value="gas">Gas Meter</option>
+      </select>
+    </div>
+    <button class="icon-btn"><i class="fa-solid fa-bell" style="color:#ffe082;"></i></button>
+  </div>
+
+  <!-- Side Drawer Menu -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+  <div class="drawer" id="sideDrawer">
+    <div class="drawer-header">
+      <h3 style="margin:0; font-size:16px;">Smart Meter Control</h3>
+      <small style="color:#ffe082;" id="selectedFilterText">Selected: All Meters</small>
+    </div>
+    <ul class="drawer-menu">
+      <li onclick="alert('01. Export & Reports')"><i class="fa-solid fa-file-arrow-down"></i> 01. Export & Reports (ڈیٹا ڈاؤن لوڈ)</li>
+      <li onclick="alert('02. Voice Alerts')"><i class="fa-solid fa-bullhorn"></i> 02. Voice Alerts (وائس سیٹنگ)</li>
+      <li onclick="alert('03. Meter Names')"><i class="fa-solid fa-pen-to-square"></i> 03. Meter Names (نام تبدیل کریں)</li>
+      <li onclick="alert('04. Due Dates')"><i class="fa-solid fa-calendar-check"></i> 04. Bill Expire & Due Dates</li>
+      <li onclick="alert('05. Tariff Settings')"><i class="fa-solid fa-gear"></i> 05. Main Settings & Tariff</li>
+      <li onclick="alert('06. Limit Control')"><i class="fa-solid fa-gauge-high"></i> 06. Limit & Budget Control</li>
+      <li onclick="alert('07. Backup')"><i class="fa-solid fa-cloud-arrow-up"></i> 07. Backup & Restore</li>
+    </ul>
+  </div>
+
+  <!-- Main Views -->
+  <div class="container">
+    <div id="tab-dashboard" class="tab-view active">
+      <div class="smart-banner">
+        <i class="fa-solid fa-lightbulb" style="font-size: 18px; color:#f57f17;"></i>
+        <div>سمارٹ تجویز: میٹر 1 کے 280 یونٹس ہو چکے ہیں۔ بوجھ دوسرے میٹر پر شفٹ کریں!</div>
+      </div>
+
+      <div class="card">
+        <div class="balance-header">
+          <span>Total Budget: PKR 30,000</span>
+          <span>Est. Bill: PKR 17,600</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #eee;">
+        <div style="text-align:center; font-size:11px; color:#777; margin-top:5px;">REMAINING BALANCE</div>
+        <div class="balance-amount">PKR 12,400</div>
+      </div>
+
+      <h4 style="margin:10px 0;">Meter Status</h4>
+
+      <div class="meter-card m-meter1">
+        <div class="meter-info">
+          <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
+          <div>
+            <strong>Meter 1 (Ground)</strong><br>
+            <small style="color:#666;">Slab Status: 280 / 300 Units</small>
+          </div>
+        </div>
+        <div style="text-align:left;">
+          <strong style="color:var(--primary);">PKR 8,200</strong><br>
+          <small style="color:red; font-weight:bold;">⚠️ Limit Near</small>
+        </div>
+      </div>
+
+      <div class="meter-card m-meter2">
+        <div class="meter-info">
+          <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
+          <div>
+            <strong>Meter 2 (Upper)</strong><br>
+            <small style="color:#666;">Slab Status: 140 / 300 Units</small>
+          </div>
+        </div>
+        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 4,100</strong></div>
+      </div>
+
+      <div class="meter-card m-meter3">
+        <div class="meter-info">
+          <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
+          <div>
+            <strong>Meter 3 (Motor)</strong><br>
+            <small style="color:#666;">Slab Status: 190 / 300 Units</small>
+          </div>
+        </div>
+        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 5,300</strong></div>
+      </div>
+
+      <div class="meter-card m-gas">
+        <div class="meter-info">
+          <div class="meter-icon" style="background:#fbe9e7; color:#d84315;"><i class="fa-solid fa-fire"></i></div>
+          <div>
+            <strong>Gas Meter</strong><br>
+            <small style="color:#666;">Slab Status: 1.2 Hm3 (Slab 1)</small>
+          </div>
+        </div>
+        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 1,200</strong></div>
+      </div>
+    </div>
+
+    <div id="tab-electricity" class="tab-view"><div class="card"><h3>⚡ Electricity Meters Detail</h3></div></div>
+    <div id="tab-gas" class="tab-view"><div class="card"><h3>🔥 Gas Meter Detail</h3></div></div>
+    <div id="tab-analytics" class="tab-view"><div class="card"><h3>📊 Analytics & History</h3></div></div>
+    <div id="tab-alerts" class="tab-view"><div class="card"><h3>🔔 Active Alerts</h3></div></div>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="showQuickReading()"><i class="fa-solid fa-camera"></i> ➕ Quick Reading</button>
+
+  <!-- Bottom Nav -->
+  <div class="nav-bar">
+    <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>Dashboard</div>
+    <div class="nav-item" onclick="switchTab('electricity', this)"><i class="fa-solid fa-bolt"></i>Electricity</div>
+    <div class="nav-item" onclick="switchTab('gas', this)"><i class="fa-solid fa-fire"></i>Gas Meter</div>
+    <div class="nav-item" onclick="switchTab('analytics', this)"><i class="fa-solid fa-chart-line"></i>Analytics</div>
+    <div class="nav-item" onclick="switchTab('alerts', this)"><i class="fa-solid fa-bell"></i>Alerts</div>
+  </div>
+
+  <script>
+    function toggleDrawer() {
+      document.getElementById('sideDrawer').classList.toggle('open');
+      let overlay = document.getElementById('drawerOverlay');
+      overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      el.classList.add('active');
+    }
+
+    function filterMeters() {
+      let val = document.getElementById('meterFilter').value;
+      document.getElementById('selectedFilterText').innerText = 'Selected: ' + val;
+      let cards = document.querySelectorAll('.meter-card');
+      cards.forEach(c => {
+        if(val === 'all' || c.classList.contains('m-' + val)) {
+          c.style.display = 'flex';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    }
+
+    function showQuickReading() {
+      let val = prompt("Enter Current Reading Value:");
+      if(val) alert("ریڈنگ کامیابی سے محفوظ کر لی گئی ہے: " + val);
+    }
+
+    // Offline Cache Logic
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          self.addEventListener('install', e => e.waitUntil(caches.open('app-cache').then(c => c.addAll(['/']))));
+          self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+        `;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob));
+      });
+    }
+  </script>
+</body>
+</html>
