@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سمارٹ میٹر کنٹرول</title>
+  <title>سمارٹ میٹر کنٹرول - ایڈوانس سسٹم</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Firebase Scripts for Realtime Laptop Sync -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>
     :root {
       --primary: #00695c;
@@ -58,9 +64,10 @@
       background: rgba(0,0,0,0.5); display: none; z-index: 200;
     }
     .drawer {
-      position: fixed; top: 0; bottom: 0; right: -280px; width: 280px;
+      position: fixed; top: 0; bottom: 0; right: -290px; width: 290px;
       background: white; transition: right 0.3s ease; z-index: 201;
       box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+      overflow-y: auto;
     }
     .drawer.open { right: 0; }
     .drawer-header { background: var(--primary-dark); color: white; padding: 20px 15px; }
@@ -74,17 +81,13 @@
     .tab-view { display: none; }
     .tab-view.active { display: block; }
 
-    /* Cards & Banners */
-    .smart-banner {
-      background: #fff8e1; border: 1px solid #ffe082; color: #8c6b00;
-      padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: bold; margin-bottom: 15px;
-    }
+    /* Cards */
     .card {
       background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 15px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;
     }
     .balance-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 10px; }
-    .balance-amount { font-size: 26px; font-weight: bold; color: #2e7d32; text-align: center; margin: 8px 0; }
+    .balance-amount { font-size: 24px; font-weight: bold; color: #2e7d32; text-align: center; margin: 8px 0; }
 
     .meter-card {
       display: flex; align-items: center; justify-content: space-between;
@@ -107,26 +110,22 @@
       background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 300; padding: 15px;
     }
     .modal {
-      background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 400px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 420px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;
     }
     .modal h3 { margin-top: 0; color: var(--primary-dark); font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-    .modal label { font-size: 12px; font-weight: bold; color: #555; }
-    .modal input, .modal select {
-      width: 100%; padding: 10px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+    .modal label { font-size: 12px; font-weight: bold; color: #555; display: block; margin-top: 8px; }
+    .modal input, .modal select, .modal textarea {
+      width: 100%; padding: 10px; margin: 4px 0 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
     }
     .modal-btn {
       background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px;
     }
     .modal-close { background: #777; margin-top: 5px; }
 
-    /* Camera Element */
-    #camera-preview { width: 100%; height: 180px; background: #222; border-radius: 8px; display: none; object-fit: cover; margin: 8px 0; }
-    #photo-preview { width: 100%; max-height: 180px; border-radius: 8px; display: none; margin: 8px 0; object-fit: cover; }
-
-    /* Log Table */
-    .log-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-    .log-table th, .log-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    /* Tables */
+    .log-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+    .log-table th, .log-table td { border: 1px solid #ddd; padding: 6px; text-align: center; }
     .log-table th { background: #e0f2f1; color: var(--primary-dark); }
 
     /* Bottom Navigation */
@@ -142,19 +141,22 @@
 </head>
 <body>
 
-  <!-- Top Bar -->
+  <!-- Top App Bar -->
   <div class="app-bar">
     <div class="app-bar-left">
       <button class="icon-btn" onclick="toggleDrawer()"><i class="fa-solid fa-bars"></i></button>
       <select class="meter-dropdown" id="meterFilter" onchange="filterMeters()">
         <option value="all">تمام میٹرز</option>
-        <option value="meter1">میٹر 1 (گراؤنڈ فلور)</option>
-        <option value="meter2">میٹر 2 (اوپر والی منزل)</option>
-        <option value="meter3">میٹر 3 (موٹر / ہیوی)</option>
+        <option value="m1">میٹر 1 (گراؤنڈ)</option>
+        <option value="m2">میٹر 2 (اوپر)</option>
+        <option value="m3">میٹر 3 (موٹر)</option>
         <option value="gas">گیس میٹر</option>
       </select>
     </div>
-    <button class="icon-btn" onclick="switchTab('alerts', document.querySelectorAll('.nav-item')[4])"><i class="fa-solid fa-bell" style="color:#ffe082;"></i></button>
+    <div>
+      <span id="sync-status" style="font-size:10px; background:#2e7d32; padding:3px 6px; border-radius:10px;">آف لائن / لوکل</span>
+      <button class="icon-btn" onclick="switchTab('alerts', document.querySelectorAll('.nav-item')[4])"><i class="fa-solid fa-bell" style="color:#ffe082;"></i></button>
+    </div>
   </div>
 
   <!-- Side Drawer Menu -->
@@ -162,28 +164,26 @@
   <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
       <h3 style="margin:0; font-size:16px;">سمارٹ میٹر کنٹرول</h3>
-      <small style="color:#ffe082;" id="selectedFilterText">منتخب کردہ: تمام میٹرز</small>
+      <small style="color:#ffe082;" id="selectedFilterText">منتخب: تمام میٹرز</small>
     </div>
     <ul class="drawer-menu">
-      <li onclick="openModal('rateModal')"><i class="fa-solid fa-calculator"></i> 01. فی یونٹ ریٹ سیٹ کریں</li>
+      <li onclick="openModal('rateModal')"><i class="fa-solid fa-calculator"></i> 01. فی یونٹ ریٹ (بجلی و گیس)</li>
       <li onclick="openModal('namesModal')"><i class="fa-solid fa-pen-to-square"></i> 02. میٹرز کے نام تبدیل کریں</li>
-      <li onclick="openModal('limitModal')"><i class="fa-solid fa-gauge-high"></i> 03. بجٹ اور حد سیٹ کریں</li>
-      <li onclick="openModal('exportModal')"><i class="fa-solid fa-file-arrow-down"></i> 04. رپورٹس ڈاؤن لوڈ کریں</li>
-      <li onclick="openModal('datesModal')"><i class="fa-solid fa-calendar-check"></i> 05. بل جمع کروانے کی تاریخیں</li>
-      <li onclick="openModal('backupModal')"><i class="fa-solid fa-cloud-arrow-up"></i> 06. بیک اپ اور ڈیٹا محفوظ کریں</li>
+      <li onclick="openModal('limitModal')"><i class="fa-solid fa-gauge-high"></i> 03. بجٹ اور حد (Limits) سیٹ کریں</li>
+      <li onclick="openModal('exportModal')"><i class="fa-solid fa-file-arrow-down"></i> 04. رپورٹس ڈاؤن لوڈ کریں (PDF/Excel)</li>
+      <li onclick="openModal('datesModal')"><i class="fa-solid fa-calendar-check"></i> 05. بل جمع کرنے کی تاریخیں</li>
+      <li onclick="openModal('backupModal')"><i class="fa-solid fa-cloud-arrow-up"></i> 06. ڈیٹا بیک اپ / ریسٹور</li>
+      <li onclick="openModal('alarmModal')"><i class="fa-solid fa-volume-high"></i> 07. وائس الارم اور ٹیکسٹ سیٹنگ</li>
+      <li onclick="openModal('historyEditModal')"><i class="fa-solid fa-clock-rotate-left"></i> 08. پرانی ریڈنگز ایڈ / ایڈٹ کریں</li>
+      <li onclick="openModal('syncKeyModal')" style="background:#fff3e0;"><i class="fa-solid fa-key"></i> 🔐 لیپ ٹاپ سنک سیکرٹ کی (Secret Key)</li>
     </ul>
   </div>
 
-  <!-- Main Pages -->
-  <div class="container">
+  <!-- Main Pages Container -->
+  <div class="container" id="reportContent">
     
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-view active">
-      <div class="smart-banner">
-        <i class="fa-solid fa-lightbulb" style="font-size: 18px; color:#f57f17;"></i>
-        <div>سمارٹ تجویز: فی یونٹ ریٹ <span id="banner-rate">30</span> روپے پر سیٹ ہے۔</div>
-      </div>
-
       <div class="card">
         <div class="balance-header">
           <span id="txt-budget">کل بجٹ: 30,000 روپے</span>
@@ -194,47 +194,51 @@
         <div class="balance-amount" id="txt-remaining">30,000 روپے</div>
       </div>
 
-      <h4 style="margin:10px 0;">میٹرز کی موجودہ صورتحال</h4>
+      <h4 style="margin:10px 0;">تمام میٹرز کا لائیو اسٹیٹس</h4>
 
-      <div class="meter-card m-meter1">
+      <!-- Meter Cards -->
+      <div class="meter-card m-m1">
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong id="label-m1">میٹر 1 (گراؤنڈ فلور)</strong><br>
-            <small style="color:#666;">کل یونٹس: <span id="m1-val">0</span></small>
+            <strong id="label-m1">میٹر 1 (گراؤنڈ)</strong><br>
+            <small>آخری ریڈنگ: <span id="m1-last-reading">0</span> | کل یونٹس: <span id="m1-units">0</span></small><br>
+            <small style="color:#2e7d32;">آج کا استعمال: <span id="m1-daily-units">0</span> یونٹ (<span id="m1-daily-bill">0</span> روپے)</small>
           </div>
         </div>
         <div style="text-align:left;">
-          <strong style="color:var(--primary);" id="m1-bill">0 روپے</strong><br>
-          <small style="color:#888;" id="m1-time">ریڈنگ: --</small>
+          <strong style="color:var(--primary);" id="m1-total-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m1-time">--</small>
         </div>
       </div>
 
-      <div class="meter-card m-meter2">
+      <div class="meter-card m-m2">
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong id="label-m2">میٹر 2 (اوپر والی منزل)</strong><br>
-            <small style="color:#666;">کل یونٹس: <span id="m2-val">0</span></small>
+            <strong id="label-m2">میٹر 2 (اوپر)</strong><br>
+            <small>آخری ریڈنگ: <span id="m2-last-reading">0</span> | کل یونٹس: <span id="m2-units">0</span></small><br>
+            <small style="color:#2e7d32;">آج کا استعمال: <span id="m2-daily-units">0</span> یونٹ (<span id="m2-daily-bill">0</span> روپے)</small>
           </div>
         </div>
         <div style="text-align:left;">
-          <strong style="color:var(--primary);" id="m2-bill">0 روپے</strong><br>
-          <small style="color:#888;" id="m2-time">ریڈنگ: --</small>
+          <strong style="color:var(--primary);" id="m2-total-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m2-time">--</small>
         </div>
       </div>
 
-      <div class="meter-card m-meter3">
+      <div class="meter-card m-m3">
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong id="label-m3">میٹر 3 (موٹر / ہیوی)</strong><br>
-            <small style="color:#666;">کل یونٹس: <span id="m3-val">0</span></small>
+            <strong id="label-m3">میٹر 3 (موٹر)</strong><br>
+            <small>آخری ریڈنگ: <span id="m3-last-reading">0</span> | کل یونٹس: <span id="m3-units">0</span></small><br>
+            <small style="color:#2e7d32;">آج کا استعمال: <span id="m3-daily-units">0</span> یونٹ (<span id="m3-daily-bill">0</span> روپے)</small>
           </div>
         </div>
         <div style="text-align:left;">
-          <strong style="color:var(--primary);" id="m3-bill">0 روپے</strong><br>
-          <small style="color:#888;" id="m3-time">ریڈنگ: --</small>
+          <strong style="color:var(--primary);" id="m3-total-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m3-time">--</small>
         </div>
       </div>
 
@@ -242,53 +246,70 @@
         <div class="meter-info">
           <div class="meter-icon" style="background:#fbe9e7; color:#d84315;"><i class="fa-solid fa-fire"></i></div>
           <div>
-            <strong>گیس میٹر</strong><br>
-            <small style="color:#666;">کل یونٹس: <span id="gas-val">0</span> Hm3</small>
+            <strong id="label-gas">گیس میٹر</strong><br>
+            <small>آخری ریڈنگ: <span id="gas-last-reading">0</span> Hm3 | MMBTU: <span id="gas-mmbtu">0</span></small><br>
+            <small style="color:#d84315;">آج کا استعمال: <span id="gas-daily-units">0</span> Hm3 (<span id="gas-daily-bill">0</span> روپے)</small>
           </div>
         </div>
         <div style="text-align:left;">
-          <strong style="color:var(--primary);" id="gas-bill">0 روپے</strong><br>
-          <small style="color:#888;" id="gas-time">ریڈنگ: --</small>
+          <strong style="color:var(--primary);" id="gas-total-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="gas-time">--</small>
         </div>
       </div>
     </div>
 
-    <!-- DAILY UNITS LOG TAB -->
+    <!-- DAILY RECORD TAB -->
     <div id="tab-electricity" class="tab-view">
       <div class="card">
-        <h3>⚡ روزانہ کا یونٹ ریکارڈ اور وقت</h3>
+        <h3>⚡ روزانہ کا ریڈنگ ریکارڈ اور وقت</h3>
         <table class="log-table">
           <thead>
             <tr>
-              <th>تاریخ و وقت</th>
               <th>میٹر</th>
-              <th>یونٹس</th>
+              <th>درج شدہ ریڈنگ</th>
+              <th>استعمال شدہ یونٹس</th>
               <th>روزانہ بل</th>
+              <th>تاریخ و وقت</th>
+              <th>ایکشن</th>
             </tr>
           </thead>
           <tbody id="logTableBody">
-            <tr><td colspan="4">ابھی کوئی ریڈنگ درج نہیں کی گئی۔</td></tr>
+            <tr><td colspan="6">کوئی ریکارڈ موجود نہیں۔</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- GAS TAB -->
+    <!-- GAS METER TAB (SNGPL Scientific Standard) -->
     <div id="tab-gas" class="tab-view">
       <div class="card">
-        <h3>🔥 گیس میٹر کی تفصیلات</h3>
-        <p><strong>موجودہ ریڈنگ:</strong> <span id="gas-tab-reading">0</span> Hm3</p>
-        <p><strong>اندازاً بل:</strong> <span id="gas-tab-bill">0</span> روپے</p>
+        <h3>🔥 گیس میٹر کی مکمل SNGPL تفصیلات</h3>
+        <p><strong>موجودہ HM3 ریڈنگ:</strong> <span id="gas-tab-reading">0</span> Hm3</p>
+        <p><strong>کل استعمال شدہ حجم (Volume):</strong> <span id="gas-tab-units">0</span> Hm3</p>
+        <p><strong>کنورژن فیکٹر MMBTU:</strong> <span id="gas-tab-mmbtu">0</span> MMBTU</p>
+        <p><strong>لاگو ہونے والا سلیب ریٹ:</strong> <span id="gas-tab-rate">0</span> Rs/MMBTU</p>
+        <p><strong>میٹر کرایہ + فکسڈ چارجز:</strong> 500 روپے</p>
+        <hr>
+        <p><strong>اندازاً کل گیس بل:</strong> <strong style="color:var(--primary);" id="gas-tab-bill">0</strong> روپے</p>
       </div>
     </div>
 
-    <!-- ANALYTICS TAB -->
+    <!-- MONTHLY USAGE ANALYSIS TAB -->
     <div id="tab-analytics" class="tab-view">
       <div class="card">
-        <h3>📊 ماہانہ استعمال کا تجزیہ</h3>
-        <p>مجموعی استعمال شدہ یونٹس: <strong id="total-units-all">0</strong> یونٹ</p>
-        <p>فی یونٹ طے شدہ ریٹ: <strong id="analytic-rate">30</strong> روپے</p>
-        <p>کل بجلی و گیس کا بل: <strong id="analytic-bill">0</strong> روپے</p>
+        <h3>📊 ماہانہ استعمال اور لیجر پروجیکشن</h3>
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>میٹر</th>
+              <th>کل بل</th>
+              <th>جمع شدہ</th>
+              <th>بقايا (باقی)</th>
+              <th>اسٹیٹس</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerTableBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -296,47 +317,53 @@
     <div id="tab-alerts" class="tab-view">
       <div class="card">
         <h3>🔔 اہم الرٹس اور اعلانات</h3>
-        <div id="alert-list" style="color:#00695c; font-weight:bold;">تمام میٹرز معمول کے مطابق چل رہے ہیں۔</div>
+        <div id="alert-list" style="line-height: 1.8;">
+          <div style="color:#2e7d32;">✔ تمام میٹرز معمول کے مطابق کام کر رہے ہیں۔</div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Quick Reading Modal with Auto Time -->
+  <!-- Quick Reading Modal -->
   <div class="modal-overlay" id="quickModal">
     <div class="modal">
-      <h3>➕ نئی ریڈنگ اور یونٹس درج کریں</h3>
+      <h3>➕ نئی میٹر ریڈنگ درج کریں</h3>
       <label>میٹر منتخب کریں:</label>
       <select id="readingMeterSelect">
-        <option value="m1">میٹر 1 (گراؤنڈ فلور)</option>
-        <option value="m2">میٹر 2 (اوپر والی منزل)</option>
-        <option value="m3">میٹر 3 (موٹر / ہیوی)</option>
+        <option value="m1">میٹر 1 (گراؤنڈ)</option>
+        <option value="m2">میٹر 2 (اوپر)</option>
+        <option value="m3">میٹر 3 (موٹر)</option>
         <option value="gas">گیس میٹر</option>
       </select>
       
-      <label>آج کے استعمال شدہ یونٹس درج کریں:</label>
-      <input type="number" id="readingUnitsInput" placeholder="مثلاً 15 یونٹ">
-
-      <button class="modal-btn" style="background:#0288d1;" onclick="startCamera()"><i class="fa-solid fa-camera"></i> کیمرہ کھولیں</button>
-      
-      <video id="camera-preview" autoplay playsinline></video>
-      <canvas id="photo-canvas" style="display:none;"></canvas>
-      <img id="photo-preview" alt="میٹر تصویر">
-
-      <button class="modal-btn" id="capture-btn" style="background:#e65100; display:none;" onclick="takePhoto()"><i class="fa-solid fa-circle-dot"></i> تصویر کھینچیں</button>
+      <label>میٹر پر موجود نئی ریڈنگ (Reading) درج کریں:</label>
+      <input type="number" id="readingValueInput" placeholder="مثلاً 4550">
 
       <button class="modal-btn" onclick="saveQuickReading()">ریڈنگ محفوظ کریں</button>
       <button class="modal-btn modal-close" onclick="closeQuickModal()">منسوخ کریں</button>
     </div>
   </div>
 
+  <!-- Secret Sync Key Modal (Only for You) -->
+  <div class="modal-overlay" id="syncKeyModal">
+    <div class="modal">
+      <h3>🔐 پرائیویٹ لیپ ٹاپ سنک کی (Private Key)</h3>
+      <p style="font-size:11px; color:#666;">یہاں اپنی پسند کا خفیہ لفظ (Secret Password) رکھیں۔ یہی سیکرٹ لفظ اپنے لیپ ٹاپ میں لکھیں گے تو صرف آپ کا ہی ڈیٹا موبائل سے لیپ ٹاپ پر لائیو نظر آئے گا۔</p>
+      <label>پرائیویٹ کی (Secret Key):</label>
+      <input type="text" id="privateKeyInput" placeholder="مثلاً shaban123">
+      <button class="modal-btn" onclick="savePrivateKey()">کی (Key) فعال کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('syncKeyModal')">بند کریں</button>
+    </div>
+  </div>
+
   <!-- Settings Modals -->
   <div class="modal-overlay" id="rateModal">
     <div class="modal">
-      <h3>⚙️ فی یونٹ ریٹ تبدیل کریں</h3>
-      <label>ایک یونٹ کی قیمت (روپے میں):</label>
-      <input type="number" id="unitRateInput" value="30">
-      <button class="modal-btn" onclick="saveRate()">ریٹ محفوظ کریں</button>
+      <h3>⚙️ فی یونٹ ریٹ سیٹ کریں</h3>
+      <label>بجلی کا فی یونٹ ریٹ (روپے):</label>
+      <input type="number" id="elecRateInput" value="30">
+      <button class="modal-btn" onclick="saveRates()">ریٹ محفوظ کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('rateModal')">بند کریں</button>
     </div>
   </div>
@@ -345,11 +372,13 @@
     <div class="modal">
       <h3>✏️ میٹرز کے نام تبدیل کریں</h3>
       <label>میٹر 1 کا نام:</label>
-      <input type="text" id="in-m1" value="میٹر 1 (گراؤنڈ فلور)">
+      <input type="text" id="in-m1" value="میٹر 1 (گراؤنڈ)">
       <label>میٹر 2 کا نام:</label>
-      <input type="text" id="in-m2" value="میٹر 2 (اوپر والی منزل)">
+      <input type="text" id="in-m2" value="میٹر 2 (اوپر)">
       <label>میٹر 3 کا نام:</label>
-      <input type="text" id="in-m3" value="میٹر 3 (موٹر / ہیوی)">
+      <input type="text" id="in-m3" value="میٹر 3 (موٹر)">
+      <label>گیس میٹر کا نام:</label>
+      <input type="text" id="in-gas" value="گیس میٹر">
       <button class="modal-btn" onclick="saveMeterNames()">نام محفوظ کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('namesModal')">بند کریں</button>
     </div>
@@ -357,41 +386,100 @@
 
   <div class="modal-overlay" id="limitModal">
     <div class="modal">
-      <h3>⚙️ کل بجٹ سیٹ کریں</h3>
-      <label>کل بجٹ (روپے میں):</label>
+      <h3>⚙️ بجٹ اور یونٹس کی حد (Limits)</h3>
+      <label>کل بجٹ (روپے):</label>
       <input type="number" id="in-budget" value="30000">
-      <button class="modal-btn" onclick="saveBudget()">بجٹ محفوظ کریں</button>
+      <label>روزانہ زیادہ سے زیادہ یونٹس کی حد:</label>
+      <input type="number" id="in-daily-limit" value="15">
+      <label>ایک میٹر کی کل ماہانہ یونٹس حد:</label>
+      <input type="number" id="in-meter-limit" value="300">
+      <button class="modal-btn" onclick="saveLimits()">حدود محفوظ کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('limitModal')">بند کریں</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="exportModal">
     <div class="modal">
-      <h3>📥 رپورٹس حاصل کریں</h3>
-      <button class="modal-btn" onclick="alert('رپورٹ ڈاؤن لوڈ ہو گئی!')">PDF رپورٹ ڈاؤن لوڈ کریں</button>
+      <h3>📥 رپورٹس ڈاؤن لوڈ کریں</h3>
+      <button class="modal-btn" style="background:#2e7d32;" onclick="exportPDF()">📄 PDF رپورٹ ڈاؤن لوڈ کریں</button>
+      <button class="modal-btn" style="background:#1565c0; margin-top:8px;" onclick="exportExcel()">📊 Excel / CSV رپورٹ ڈاؤن لوڈ کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('exportModal')">بند کریں</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="datesModal">
     <div class="modal">
-      <h3>📅 بل جمع کروانے کی تاریخیں</h3>
-      <p>بجلی کے بل کی آخری تاریخ: 25 تاریخ</p>
-      <p>گیس کے بل کی آخری تاریخ: 18 تاریخ</p>
+      <h3>📅 بل کی آخری تاریخیں سیٹ کریں</h3>
+      <label>بجلی کے بل کی تاریخ (ماہانہ):</label>
+      <input type="number" id="elecDueDate" value="25" min="1" max="31">
+      <label>گیس کے بل کی تاریخ (ماہانہ):</label>
+      <input type="number" id="gasDueDate" value="18" min="1" max="31">
+      <button class="modal-btn" onclick="saveBillDates()">تاریخیں محفوظ کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('datesModal')">بند کریں</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="backupModal">
     <div class="modal">
-      <h3>☁️ بیک اپ اور ڈیٹا</h3>
-      <button class="modal-btn" onclick="alert('ڈیٹا محفوظ کر لیا گیا!')">ڈیٹا سیو کریں</button>
+      <h3>☁️ ڈیٹا بیک اپ اور ریسٹور</h3>
+      <button class="modal-btn" onclick="downloadBackup()">💾 بیک اپ فائل ڈاؤن لوڈ کریں (JSON)</button>
+      <label style="margin-top:15px;">بیک اپ فائل سے ڈیٹا ریسٹور کریں:</label>
+      <input type="file" id="restoreFile" accept=".json">
+      <button class="modal-btn" style="background:#e65100;" onclick="restoreBackup()">🔄 ڈیٹا ریسٹور کریں</button>
       <button class="modal-btn modal-close" onclick="closeModal('backupModal')">بند کریں</button>
     </div>
   </div>
 
-  <!-- Floating Button -->
-  <button class="fab" onclick="openQuickModal()"><i class="fa-solid fa-camera"></i> ➕ نئی ریڈنگ</button>
+  <div class="modal-overlay" id="alarmModal">
+    <div class="modal">
+      <h3>📢 وائس الرٹ اور الارم کی تفصیلات</h3>
+      <label>روزانہ کی حد کراس ہونے کا پیغام:</label>
+      <textarea id="msg-daily-limit" rows="2">توجہ فرمائیں! آج کے یونٹس کی حد مکمل ہو گئی ہے۔</textarea>
+      
+      <label>میٹر کی کل حد کراس ہونے کا پیغام:</label>
+      <textarea id="msg-meter-limit" rows="2">انتباہ! اس میٹر کے ماہانہ یونٹس حد سے بڑھ رہے ہیں۔</textarea>
+
+      <label>رات 10 بجے ریڈنگ نہ کرنے کا پیغام:</label>
+      <textarea id="msg-night-reminder" rows="2">رات کے 10 بج چکے ہیں، براہ کرم آج کی میٹر ریڈنگ درج کریں۔</textarea>
+
+      <button class="modal-btn" onclick="saveVoiceMessages()">پیغامات محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('alarmModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="historyEditModal">
+    <div class="modal">
+      <h3>⏱️ پرانی ریڈنگ ایڈ کریں</h3>
+      <label>میٹر منتخب کریں:</label>
+      <select id="histMeter">
+        <option value="m1">میٹر 1 (گراؤنڈ)</option>
+        <option value="m2">میٹر 2 (اوپر)</option>
+        <option value="m3">میٹر 3 (موٹر)</option>
+        <option value="gas">گیس میٹر</option>
+      </select>
+      <label>پرانی ریڈنگ:</label>
+      <input type="number" id="histReading">
+      <label>تاریخ اور وقت:</label>
+      <input type="datetime-local" id="histDateTime">
+      <button class="modal-btn" onclick="addHistoricalReading()">پرانی ریڈنگ شامل کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('historyEditModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <h3>💳 بل کی ادائیگی درج کریں</h3>
+      <input type="hidden" id="payMeterKey">
+      <label id="payMeterLabel">میٹر:</label>
+      <label>ادائی رقم درج کریں (روپے):</label>
+      <input type="number" id="payAmountInput">
+      <button class="modal-btn" onclick="savePayment()">ادائیگی محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('paymentModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <!-- Floating Quick Reading Button -->
+  <button class="fab" onclick="openQuickModal()"><i class="fa-solid fa-plus"></i> ➕ نئی ریڈنگ</button>
 
   <!-- Bottom Navigation Bar -->
   <div class="nav-bar">
@@ -403,10 +491,100 @@
   </div>
 
   <script>
-    let videoStream = null;
-    let unitRate = 30;
-    let totalBudget = 30000;
-    let meterData = { m1: 0, m2: 0, m3: 0, gas: 0 };
+    /* Public Shared Database Engine for Secure Remote Syncing */
+    const firebaseConfig = {
+      databaseURL: "https://smart-meter-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    
+    // Application Global State
+    let appData = {
+      privateKey: "",
+      rates: { elec: 30 },
+      limits: { budget: 30000, daily: 15, meter: 300 },
+      billDates: { elec: 25, gas: 18 },
+      names: { m1: 'میٹر 1 (گراؤنڈ)', m2: 'میٹر 2 (اوپر)', m3: 'میٹر 3 (موٹر)', gas: 'گیس میٹر' },
+      messages: {
+        daily: 'توجہ فرمائیں! آج کے یونٹس کی حد مکمل ہو گئی ہے۔',
+        meter: 'انتباہ! اس میٹر کے ماہانہ یونٹس حد سے بڑھ رہے ہیں۔',
+        night: 'رات کے 10 بج چکے ہیں، براہ کرم آج کی میٹر ریڈنگ درج کریں۔'
+      },
+      readings: [],
+      payments: { m1: 0, m2: 0, m3: 0, gas: 0 }
+    };
+
+    let dbRef = null;
+
+    window.onload = function() {
+      let saved = localStorage.getItem('smart_meter_app_db');
+      if(saved) {
+        try { appData = JSON.parse(saved); } catch(e){}
+      }
+      syncInputs();
+      renderAll();
+      initFirebaseSync();
+    };
+
+    /* SNGPL Gas Bill Formula Calculator */
+    function calculateGasBillSNGPL(hm3Units) {
+      if(hm3Units <= 0) return { mmbtu: 0, bill: 0, rate: 0 };
+      
+      // Standard Gas Conversion Factor
+      let mmbtu = (hm3Units * 12.12) / 28.1738;
+      let rate = 300; // Protected Slab 1 Base Rate
+
+      if(mmbtu <= 0.5) rate = 300;
+      else if(mmbtu <= 1.0) rate = 550;
+      else if(mmbtu <= 1.5) rate = 750;
+      else if(mmbtu <= 2.0) rate = 1000;
+      else if(mmbtu <= 3.0) rate = 1250;
+      else rate = 3000; // Unprotected High Slab
+
+      let baseCost = mmbtu * rate;
+      let meterRent = 500; // Fixed Charges
+      let totalBill = Math.round(baseCost + meterRent);
+
+      return { mmbtu: mmbtu.toFixed(2), bill: totalBill, rate: rate };
+    }
+
+    function initFirebaseSync() {
+      if(appData.privateKey && appData.privateKey.trim() !== "") {
+        try {
+          if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+          let key = appData.privateKey.trim();
+          dbRef = firebase.database().ref('users/' + key);
+          
+          document.getElementById('sync-status').innerText = '⚡ لائیو سنک فعال';
+          document.getElementById('sync-status').style.background = '#0288d1';
+
+          // Listen for Live Updates on Laptop/Mobile
+          dbRef.on('value', (snapshot) => {
+            let data = snapshot.val();
+            if(data) {
+              appData = data;
+              localStorage.setItem('smart_meter_app_db', JSON.stringify(appData));
+              renderAll();
+            }
+          });
+        } catch(e){}
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem('smart_meter_app_db', JSON.stringify(appData));
+      renderAll();
+      if(dbRef) {
+        dbRef.set(appData);
+      }
+    }
+
+    function savePrivateKey() {
+      let key = document.getElementById('privateKeyInput').value;
+      if(!key) { alert("براہ کرم کوئی خفیہ لفظ لکھیں!"); return; }
+      appData.privateKey = key;
+      saveData();
+      closeModal('syncKeyModal');
+      location.reload();
+    }
 
     function toggleDrawer() {
       document.getElementById('sideDrawer').classList.toggle('open');
@@ -423,7 +601,7 @@
 
     function filterMeters() {
       let val = document.getElementById('meterFilter').value;
-      document.getElementById('selectedFilterText').innerText = 'منتخب کردہ: ' + val;
+      document.getElementById('selectedFilterText').innerText = 'منتخب: ' + (appData.names[val] || 'تمام میٹرز');
       let cards = document.querySelectorAll('.meter-card');
       cards.forEach(c => {
         if(val === 'all' || c.classList.contains('m-' + val)) {
@@ -441,127 +619,282 @@
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function openQuickModal() { document.getElementById('quickModal').style.display = 'flex'; }
-    function closeQuickModal() {
-      stopCamera();
-      document.getElementById('quickModal').style.display = 'none';
-    }
+    function closeQuickModal() { document.getElementById('quickModal').style.display = 'none'; }
 
-    /* Camera Logic */
-    async function startCamera() {
-      const video = document.getElementById('camera-preview');
-      const captureBtn = document.getElementById('capture-btn');
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false
-        });
-        video.srcObject = videoStream;
-        video.style.display = 'block';
-        captureBtn.style.display = 'block';
-      } catch (err) {
-        alert("کیمرہ کی پرمیشن دیں۔");
-      }
-    }
-
-    function takePhoto() {
-      const video = document.getElementById('camera-preview');
-      const canvas = document.getElementById('photo-canvas');
-      const photo = document.getElementById('photo-preview');
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      
-      photo.src = canvas.toDataURL('image/png');
-      photo.style.display = 'block';
-      stopCamera();
-    }
-
-    function stopCamera() {
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-      }
-      document.getElementById('camera-preview').style.display = 'none';
-      document.getElementById('capture-btn').style.display = 'none';
-    }
-
-    /* Calculations & Readings */
     function saveQuickReading() {
       let meter = document.getElementById('readingMeterSelect').value;
-      let val = parseFloat(document.getElementById('readingUnitsInput').value);
-      
-      if(!isNaN(val)) {
-        meterData[meter] += val;
-        let now = new Date();
-        let timeStr = now.toLocaleDateString('ur-PK') + ' ' + now.toLocaleTimeString('ur-PK', {hour: '2-digit', minute:'2-digit'});
+      let newReading = parseFloat(document.getElementById('readingValueInput').value);
 
-        // Update UI
-        document.getElementById(meter + '-val').innerText = meterData[meter];
-        let bill = meterData[meter] * unitRate;
-        document.getElementById(meter + '-bill').innerText = bill + ' روپے';
-        document.getElementById(meter + '-time').innerText = timeStr;
-
-        // Add Log to Daily Table
-        let tbody = document.getElementById('logTableBody');
-        if(tbody.children[0].children.length === 1) tbody.innerHTML = '';
-        
-        let meterNames = { m1: 'میٹر 1', m2: 'میٹر 2', m3: 'میٹر 3', gas: 'گیس میٹر' };
-        let row = `<tr>
-          <td>${timeStr}</td>
-          <td>${meterNames[meter]}</td>
-          <td>${val}</td>
-          <td>${val * unitRate} روپے</td>
-        </tr>`;
-        tbody.innerHTML = row + tbody.innerHTML;
-
-        updateTotals();
-        alert("ریڈنگ اور وقت کامیابی سے محفوظ ہو گیا!");
-        closeQuickModal();
-      } else {
-        alert("براہ کرم صحیح یونٹ درج کریں!");
+      if(isNaN(newReading)) {
+        alert("براہ کرم صحیح ریڈنگ درج کریں!");
+        return;
       }
+
+      let meterLogs = appData.readings.filter(r => r.meter === meter);
+      let prevReading = meterLogs.length > 0 ? meterLogs[0].reading : newReading;
+      let units = newReading >= prevReading ? (newReading - prevReading) : 0;
+      
+      let dailyBill = 0;
+      if(meter === 'gas') {
+        let gasRes = calculateGasBillSNGPL(units);
+        dailyBill = gasRes.bill;
+      } else {
+        dailyBill = units * appData.rates.elec;
+      }
+
+      let now = new Date();
+      let timeStr = now.toLocaleDateString('ur-PK') + ' ' + now.toLocaleTimeString('ur-PK', {hour:'2-digit', minute:'2-digit'});
+
+      let entry = {
+        id: Date.now(),
+        meter: meter,
+        reading: newReading,
+        units: units,
+        dailyBill: dailyBill,
+        timestamp: timeStr,
+        rawDate: now.toISOString()
+      };
+
+      appData.readings.unshift(entry);
+      saveData();
+      closeQuickModal();
+      alert("ریڈنگ کامیابی سے پروسیڈ ہو گئی!");
     }
 
-    function saveRate() {
-      unitRate = parseFloat(document.getElementById('unitRateInput').value) || 30;
-      document.getElementById('banner-rate').innerText = unitRate;
-      document.getElementById('analytic-rate').innerText = unitRate;
-      updateTotals();
+    function renderAll() {
+      document.getElementById('label-m1').innerText = appData.names.m1;
+      document.getElementById('label-m2').innerText = appData.names.m2;
+      document.getElementById('label-m3').innerText = appData.names.m3;
+      document.getElementById('label-gas').innerText = appData.names.gas;
+
+      let totals = { m1: {units:0, bill:0, last:0, dailyUnits:0, dailyBill:0, time:'--'},
+                     m2: {units:0, bill:0, last:0, dailyUnits:0, dailyBill:0, time:'--'},
+                     m3: {units:0, bill:0, last:0, dailyUnits:0, dailyBill:0, time:'--'},
+                     gas: {units:0, bill:0, last:0, dailyUnits:0, dailyBill:0, time:'--'} };
+
+      let todayStr = new Date().toLocaleDateString('ur-PK');
+
+      appData.readings.forEach(r => {
+        if(totals[r.meter]) {
+          totals[r.meter].units += r.units;
+          totals[r.meter].bill += r.dailyBill;
+          if(totals[r.meter].last === 0) {
+            totals[r.meter].last = r.reading;
+            totals[r.meter].time = r.timestamp;
+          }
+          if(r.timestamp.includes(todayStr)) {
+            totals[r.meter].dailyUnits += r.units;
+            totals[r.meter].dailyBill += r.dailyBill;
+          }
+        }
+      });
+
+      // Update Electricity Meters
+      ['m1', 'm2', 'm3'].forEach(m => {
+        document.getElementById(m + '-last-reading').innerText = totals[m].last;
+        document.getElementById(m + '-units').innerText = totals[m].units;
+        document.getElementById(m + '-daily-units').innerText = totals[m].dailyUnits;
+        document.getElementById(m + '-daily-bill').innerText = totals[m].dailyBill;
+        document.getElementById(m + '-total-bill').innerText = totals[m].bill + ' روپے';
+        document.getElementById(m + '-time').innerText = totals[m].time;
+      });
+
+      // Gas Scientific Update
+      let gasCalc = calculateGasBillSNGPL(totals.gas.units);
+      document.getElementById('gas-last-reading').innerText = totals.gas.last;
+      document.getElementById('gas-mmbtu').innerText = gasCalc.mmbtu;
+      document.getElementById('gas-daily-units').innerText = totals.gas.dailyUnits;
+      document.getElementById('gas-daily-bill').innerText = totals.gas.dailyBill;
+      document.getElementById('gas-total-bill').innerText = totals.gas.bill + ' روپے';
+      document.getElementById('gas-time').innerText = totals.gas.time;
+
+      // Gas Tab Dynamic Info
+      document.getElementById('gas-tab-reading').innerText = totals.gas.last;
+      document.getElementById('gas-tab-units').innerText = totals.gas.units;
+      document.getElementById('gas-tab-mmbtu').innerText = gasCalc.mmbtu;
+      document.getElementById('gas-tab-rate').innerText = gasCalc.rate;
+      document.getElementById('gas-tab-bill').innerText = totals.gas.bill;
+
+      // Calculations
+      let grandTotalBill = totals.m1.bill + totals.m2.bill + totals.m3.bill + totals.gas.bill;
+      let remainingBudget = appData.limits.budget - grandTotalBill;
+
+      document.getElementById('txt-budget').innerText = "کل بجٹ: " + appData.limits.budget + " روپے";
+      document.getElementById('txt-total-bill').innerText = "کل اندازاً بل: " + grandTotalBill + " روپے";
+      document.getElementById('txt-remaining').innerText = remainingBudget + " روپے";
+
+      // Render Tables
+      let logBody = document.getElementById('logTableBody');
+      if(appData.readings.length === 0) {
+        logBody.innerHTML = '<tr><td colspan="6">کوئی ریکارڈ موجود نہیں۔</td></tr>';
+      } else {
+        logBody.innerHTML = appData.readings.map(r => `
+          <tr>
+            <td>${appData.names[r.meter]}</td>
+            <td>${r.reading}</td>
+            <td>${r.units}</td>
+            <td>${r.dailyBill} روپے</td>
+            <td>${r.timestamp}</td>
+            <td><button onclick="deleteLog(${r.id})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>
+        `).join('');
+      }
+
+      let ledgerBody = document.getElementById('ledgerTableBody');
+      ledgerBody.innerHTML = ['m1', 'm2', 'm3', 'gas'].map(m => {
+        let bill = totals[m].bill;
+        let paid = appData.payments[m] || 0;
+        let remaining = bill - paid;
+        let status = remaining <= 0 && bill > 0 ? '<span style="color:green; font-weight:bold;">اداشدہ</span>' : '<span style="color:red; font-weight:bold;">واجب الادا</span>';
+        return `
+          <tr>
+            <td>${appData.names[m]}</td>
+            <td>${bill} روپے</td>
+            <td>${paid} روپے</td>
+            <td>${remaining} روپے</td>
+            <td>${status} <button onclick="openPaymentModal('${m}')" style="font-size:10px; background:var(--primary); color:white; border:none; border-radius:4px; padding:2px 5px; cursor:pointer;">ادائیگی</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function syncInputs() {
+      document.getElementById('elecRateInput').value = appData.rates.elec;
+      document.getElementById('in-budget').value = appData.limits.budget;
+      document.getElementById('in-daily-limit').value = appData.limits.daily;
+      document.getElementById('in-meter-limit').value = appData.limits.meter;
+      document.getElementById('elecDueDate').value = appData.billDates.elec;
+      document.getElementById('gasDueDate').value = appData.billDates.gas;
+      document.getElementById('in-m1').value = appData.names.m1;
+      document.getElementById('in-m2').value = appData.names.m2;
+      document.getElementById('in-m3').value = appData.names.m3;
+      document.getElementById('in-gas').value = appData.names.gas;
+      document.getElementById('privateKeyInput').value = appData.privateKey || "";
+    }
+
+    function saveRates() {
+      appData.rates.elec = parseFloat(document.getElementById('elecRateInput').value) || 30;
+      saveData();
       closeModal('rateModal');
     }
 
-    function saveBudget() {
-      totalBudget = parseFloat(document.getElementById('in-budget').value) || 30000;
-      document.getElementById('txt-budget').innerText = "کل بجٹ: " + totalBudget + " روپے";
-      updateTotals();
-      closeModal('limitModal');
-    }
-
     function saveMeterNames() {
-      document.getElementById('label-m1').innerText = document.getElementById('in-m1').value;
-      document.getElementById('label-m2').innerText = document.getElementById('in-m2').value;
-      document.getElementById('label-m3').innerText = document.getElementById('in-m3').value;
+      appData.names.m1 = document.getElementById('in-m1').value;
+      appData.names.m2 = document.getElementById('in-m2').value;
+      appData.names.m3 = document.getElementById('in-m3').value;
+      appData.names.gas = document.getElementById('in-gas').value;
+      saveData();
       closeModal('namesModal');
     }
 
-    function updateTotals() {
-      let totalUnits = meterData.m1 + meterData.m2 + meterData.m3 + meterData.gas;
-      let totalBill = totalUnits * unitRate;
-      let remaining = totalBudget - totalBill;
+    function saveLimits() {
+      appData.limits.budget = parseFloat(document.getElementById('in-budget').value) || 30000;
+      appData.limits.daily = parseFloat(document.getElementById('in-daily-limit').value) || 15;
+      appData.limits.meter = parseFloat(document.getElementById('in-meter-limit').value) || 300;
+      saveData();
+      closeModal('limitModal');
+    }
 
-      // Update Individual Bills
-      ['m1', 'm2', 'm3', 'gas'].forEach(m => {
-        document.getElementById(m + '-bill').innerText = (meterData[m] * unitRate) + ' روپے';
+    function saveBillDates() {
+      appData.billDates.elec = parseInt(document.getElementById('elecDueDate').value) || 25;
+      appData.billDates.gas = parseInt(document.getElementById('gasDueDate').value) || 18;
+      saveData();
+      closeModal('datesModal');
+    }
+
+    function saveVoiceMessages() {
+      appData.messages.daily = document.getElementById('msg-daily-limit').value;
+      appData.messages.meter = document.getElementById('msg-meter-limit').value;
+      appData.messages.night = document.getElementById('msg-night-reminder').value;
+      saveData();
+      closeModal('alarmModal');
+    }
+
+    function openPaymentModal(meterKey) {
+      document.getElementById('payMeterKey').value = meterKey;
+      document.getElementById('payMeterLabel').innerText = "میٹر: " + appData.names[meterKey];
+      openModal('paymentModal');
+    }
+
+    function savePayment() {
+      let m = document.getElementById('payMeterKey').value;
+      let amt = parseFloat(document.getElementById('payAmountInput').value) || 0;
+      appData.payments[m] = (appData.payments[m] || 0) + amt;
+      saveData();
+      closeModal('paymentModal');
+    }
+
+    function deleteLog(id) {
+      if(confirm("کیا آپ اس ریڈنگ کو حذف کرنا چاہتے ہیں؟")) {
+        appData.readings = appData.readings.filter(r => r.id !== id);
+        saveData();
+      }
+    }
+
+    function addHistoricalReading() {
+      let meter = document.getElementById('histMeter').value;
+      let reading = parseFloat(document.getElementById('histReading').value);
+      let dt = document.getElementById('histDateTime').value;
+
+      if(!isNaN(reading) && dt) {
+        let now = new Date(dt);
+        let timeStr = now.toLocaleDateString('ur-PK') + ' ' + now.toLocaleTimeString('ur-PK', {hour:'2-digit', minute:'2-digit'});
+        
+        let entry = {
+          id: Date.now(),
+          meter: meter,
+          reading: reading,
+          units: 0,
+          dailyBill: 0,
+          timestamp: timeStr,
+          rawDate: now.toISOString()
+        };
+
+        appData.readings.push(entry);
+        appData.readings.sort((a,b) => new Date(b.rawDate) - new Date(a.rawDate));
+        saveData();
+        closeModal('historyEditModal');
+      }
+    }
+
+    function exportPDF() {
+      let element = document.getElementById('reportContent');
+      html2pdf().from(element).save('Smart_Meter_Report.pdf');
+    }
+
+    function exportExcel() {
+      let csv = "Meter,Reading,Units,DailyBill,Timestamp\n";
+      appData.readings.forEach(r => {
+        csv += `"${appData.names[r.meter]}",${r.reading},${r.units},${r.dailyBill},"${r.timestamp}"\n`;
       });
+      let blob = new Blob([csv], { type: 'text/csv' });
+      let link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'Smart_Meter_Data.csv';
+      link.click();
+    }
 
-      document.getElementById('txt-total-bill').innerText = "کل اندازاً بل: " + totalBill + " روپے";
-      document.getElementById('txt-remaining').innerText = remaining + " روپے";
-      document.getElementById('gas-tab-reading').innerText = meterData.gas;
-      document.getElementById('gas-tab-bill').innerText = (meterData.gas * unitRate) + " روپے";
-      
-      document.getElementById('total-units-all').innerText = totalUnits;
-      document.getElementById('analytic-bill').innerText = totalBill;
+    function downloadBackup() {
+      let blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+      let link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'SmartMeter_Backup.json';
+      link.click();
+    }
+
+    function restoreBackup() {
+      let fileInput = document.getElementById('restoreFile');
+      if(fileInput.files.length === 0) return;
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          appData = JSON.parse(e.target.result);
+          saveData();
+          syncInputs();
+          closeModal('backupModal');
+        } catch(err){}
+      };
+      reader.readAsText(fileInput.files[0]);
     }
   </script>
 </body>
