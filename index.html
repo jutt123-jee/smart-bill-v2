@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Meter App</title>
+  <title>سمارٹ میٹر کنٹرول</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -69,12 +69,12 @@
       padding: 12px 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; font-size: 13px; cursor: pointer;
     }
 
-    /* Main Content Containers */
+    /* Main Containers */
     .container { padding: 15px; max-width: 500px; margin: 0 auto; }
     .tab-view { display: none; }
     .tab-view.active { display: block; }
 
-    /* Banner & Cards */
+    /* Cards & Banners */
     .smart-banner {
       background: #fff8e1; border: 1px solid #ffe082; color: #8c6b00;
       padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: bold; margin-bottom: 15px;
@@ -93,7 +93,7 @@
     .meter-info { display: flex; align-items: center; gap: 10px; }
     .meter-icon { width: 36px; height: 36px; border-radius: 50%; background: #e0f2f1; color: var(--primary); display: flex; align-items: center; justify-content: center; }
 
-    /* Floating Action Button */
+    /* Quick Action Button */
     .fab {
       position: fixed; bottom: 70px; left: 15px;
       background: var(--accent); color: black; border: none; padding: 12px 18px;
@@ -101,83 +101,112 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 90;
     }
 
-    /* Navigation Bar */
+    /* Modal Popup */
+    .modal-overlay {
+      position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 300; padding: 15px;
+    }
+    .modal {
+      background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 400px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .modal h3 { margin-top: 0; color: var(--primary-dark); font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .modal label { font-size: 12px; font-weight: bold; color: #555; }
+    .modal input, .modal select {
+      width: 100%; padding: 10px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+    }
+    .modal-btn {
+      background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px;
+    }
+    .modal-close { background: #777; margin-top: 5px; }
+
+    /* Camera Element */
+    #camera-preview { width: 100%; height: 180px; background: #222; border-radius: 8px; display: none; object-fit: cover; margin: 8px 0; }
+    #photo-preview { width: 100%; max-height: 180px; border-radius: 8px; display: none; margin: 8px 0; object-fit: cover; }
+
+    /* Log Table */
+    .log-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    .log-table th, .log-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .log-table th { background: #e0f2f1; color: var(--primary-dark); }
+
+    /* Bottom Navigation */
     .nav-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: white; display: flex; justify-content: space-around;
       padding: 8px 0; border-top: 1px solid #ddd; z-index: 100;
     }
-    .nav-item { text-align: center; font-size: 10px; color: #777; cursor: pointer; flex: 1; }
+    .nav-item { text-align: center; font-size: 11px; color: #777; cursor: pointer; flex: 1; }
     .nav-item.active { color: var(--primary); font-weight: bold; }
     .nav-item i { font-size: 18px; margin-bottom: 3px; display: block; }
   </style>
 </head>
 <body>
 
-  <!-- Top App Bar -->
+  <!-- Top Bar -->
   <div class="app-bar">
     <div class="app-bar-left">
       <button class="icon-btn" onclick="toggleDrawer()"><i class="fa-solid fa-bars"></i></button>
       <select class="meter-dropdown" id="meterFilter" onchange="filterMeters()">
-        <option value="all">All Meters</option>
-        <option value="meter1">Meter 1 (Ground Floor)</option>
-        <option value="meter2">Meter 2 (Upper Floor)</option>
-        <option value="meter3">Meter 3 (Motor/Heavy)</option>
-        <option value="gas">Gas Meter</option>
+        <option value="all">تمام میٹرز</option>
+        <option value="meter1">میٹر 1 (گراؤنڈ فلور)</option>
+        <option value="meter2">میٹر 2 (اوپر والی منزل)</option>
+        <option value="meter3">میٹر 3 (موٹر / ہیوی)</option>
+        <option value="gas">گیس میٹر</option>
       </select>
     </div>
-    <button class="icon-btn"><i class="fa-solid fa-bell" style="color:#ffe082;"></i></button>
+    <button class="icon-btn" onclick="switchTab('alerts', document.querySelectorAll('.nav-item')[4])"><i class="fa-solid fa-bell" style="color:#ffe082;"></i></button>
   </div>
 
   <!-- Side Drawer Menu -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
   <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-      <h3 style="margin:0; font-size:16px;">Smart Meter Control</h3>
-      <small style="color:#ffe082;" id="selectedFilterText">Selected: All Meters</small>
+      <h3 style="margin:0; font-size:16px;">سمارٹ میٹر کنٹرول</h3>
+      <small style="color:#ffe082;" id="selectedFilterText">منتخب کردہ: تمام میٹرز</small>
     </div>
     <ul class="drawer-menu">
-      <li onclick="alert('01. Export & Reports')"><i class="fa-solid fa-file-arrow-down"></i> 01. Export & Reports (ڈیٹا ڈاؤن لوڈ)</li>
-      <li onclick="alert('02. Voice Alerts')"><i class="fa-solid fa-bullhorn"></i> 02. Voice Alerts (وائس سیٹنگ)</li>
-      <li onclick="alert('03. Meter Names')"><i class="fa-solid fa-pen-to-square"></i> 03. Meter Names (نام تبدیل کریں)</li>
-      <li onclick="alert('04. Due Dates')"><i class="fa-solid fa-calendar-check"></i> 04. Bill Expire & Due Dates</li>
-      <li onclick="alert('05. Tariff Settings')"><i class="fa-solid fa-gear"></i> 05. Main Settings & Tariff</li>
-      <li onclick="alert('06. Limit Control')"><i class="fa-solid fa-gauge-high"></i> 06. Limit & Budget Control</li>
-      <li onclick="alert('07. Backup')"><i class="fa-solid fa-cloud-arrow-up"></i> 07. Backup & Restore</li>
+      <li onclick="openModal('rateModal')"><i class="fa-solid fa-calculator"></i> 01. فی یونٹ ریٹ سیٹ کریں</li>
+      <li onclick="openModal('namesModal')"><i class="fa-solid fa-pen-to-square"></i> 02. میٹرز کے نام تبدیل کریں</li>
+      <li onclick="openModal('limitModal')"><i class="fa-solid fa-gauge-high"></i> 03. بجٹ اور حد سیٹ کریں</li>
+      <li onclick="openModal('exportModal')"><i class="fa-solid fa-file-arrow-down"></i> 04. رپورٹس ڈاؤن لوڈ کریں</li>
+      <li onclick="openModal('datesModal')"><i class="fa-solid fa-calendar-check"></i> 05. بل جمع کروانے کی تاریخیں</li>
+      <li onclick="openModal('backupModal')"><i class="fa-solid fa-cloud-arrow-up"></i> 06. بیک اپ اور ڈیٹا محفوظ کریں</li>
     </ul>
   </div>
 
-  <!-- Main Views -->
+  <!-- Main Pages -->
   <div class="container">
+    
+    <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-view active">
       <div class="smart-banner">
         <i class="fa-solid fa-lightbulb" style="font-size: 18px; color:#f57f17;"></i>
-        <div>سمارٹ تجویز: میٹر 1 کے 280 یونٹس ہو چکے ہیں۔ بوجھ دوسرے میٹر پر شفٹ کریں!</div>
+        <div>سمارٹ تجویز: فی یونٹ ریٹ <span id="banner-rate">30</span> روپے پر سیٹ ہے۔</div>
       </div>
 
       <div class="card">
         <div class="balance-header">
-          <span>Total Budget: PKR 30,000</span>
-          <span>Est. Bill: PKR 17,600</span>
+          <span id="txt-budget">کل بجٹ: 30,000 روپے</span>
+          <span id="txt-total-bill">کل اندازاً بل: 0 روپے</span>
         </div>
         <hr style="border:none; border-top:1px solid #eee;">
-        <div style="text-align:center; font-size:11px; color:#777; margin-top:5px;">REMAINING BALANCE</div>
-        <div class="balance-amount">PKR 12,400</div>
+        <div style="text-align:center; font-size:11px; color:#777; margin-top:5px;">باقی بچ جانے والا بجٹ</div>
+        <div class="balance-amount" id="txt-remaining">30,000 روپے</div>
       </div>
 
-      <h4 style="margin:10px 0;">Meter Status</h4>
+      <h4 style="margin:10px 0;">میٹرز کی موجودہ صورتحال</h4>
 
       <div class="meter-card m-meter1">
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong>Meter 1 (Ground)</strong><br>
-            <small style="color:#666;">Slab Status: 280 / 300 Units</small>
+            <strong id="label-m1">میٹر 1 (گراؤنڈ فلور)</strong><br>
+            <small style="color:#666;">کل یونٹس: <span id="m1-val">0</span></small>
           </div>
         </div>
         <div style="text-align:left;">
-          <strong style="color:var(--primary);">PKR 8,200</strong><br>
-          <small style="color:red; font-weight:bold;">⚠️ Limit Near</small>
+          <strong style="color:var(--primary);" id="m1-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m1-time">ریڈنگ: --</small>
         </div>
       </div>
 
@@ -185,55 +214,200 @@
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong>Meter 2 (Upper)</strong><br>
-            <small style="color:#666;">Slab Status: 140 / 300 Units</small>
+            <strong id="label-m2">میٹر 2 (اوپر والی منزل)</strong><br>
+            <small style="color:#666;">کل یونٹس: <span id="m2-val">0</span></small>
           </div>
         </div>
-        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 4,100</strong></div>
+        <div style="text-align:left;">
+          <strong style="color:var(--primary);" id="m2-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m2-time">ریڈنگ: --</small>
+        </div>
       </div>
 
       <div class="meter-card m-meter3">
         <div class="meter-info">
           <div class="meter-icon"><i class="fa-solid fa-bolt"></i></div>
           <div>
-            <strong>Meter 3 (Motor)</strong><br>
-            <small style="color:#666;">Slab Status: 190 / 300 Units</small>
+            <strong id="label-m3">میٹر 3 (موٹر / ہیوی)</strong><br>
+            <small style="color:#666;">کل یونٹس: <span id="m3-val">0</span></small>
           </div>
         </div>
-        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 5,300</strong></div>
+        <div style="text-align:left;">
+          <strong style="color:var(--primary);" id="m3-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="m3-time">ریڈنگ: --</small>
+        </div>
       </div>
 
       <div class="meter-card m-gas">
         <div class="meter-info">
           <div class="meter-icon" style="background:#fbe9e7; color:#d84315;"><i class="fa-solid fa-fire"></i></div>
           <div>
-            <strong>Gas Meter</strong><br>
-            <small style="color:#666;">Slab Status: 1.2 Hm3 (Slab 1)</small>
+            <strong>گیس میٹر</strong><br>
+            <small style="color:#666;">کل یونٹس: <span id="gas-val">0</span> Hm3</small>
           </div>
         </div>
-        <div style="text-align:left;"><strong style="color:var(--primary);">PKR 1,200</strong></div>
+        <div style="text-align:left;">
+          <strong style="color:var(--primary);" id="gas-bill">0 روپے</strong><br>
+          <small style="color:#888;" id="gas-time">ریڈنگ: --</small>
+        </div>
       </div>
     </div>
 
-    <div id="tab-electricity" class="tab-view"><div class="card"><h3>⚡ Electricity Meters Detail</h3></div></div>
-    <div id="tab-gas" class="tab-view"><div class="card"><h3>🔥 Gas Meter Detail</h3></div></div>
-    <div id="tab-analytics" class="tab-view"><div class="card"><h3>📊 Analytics & History</h3></div></div>
-    <div id="tab-alerts" class="tab-view"><div class="card"><h3>🔔 Active Alerts</h3></div></div>
+    <!-- DAILY UNITS LOG TAB -->
+    <div id="tab-electricity" class="tab-view">
+      <div class="card">
+        <h3>⚡ روزانہ کا یونٹ ریکارڈ اور وقت</h3>
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>تاریخ و وقت</th>
+              <th>میٹر</th>
+              <th>یونٹس</th>
+              <th>روزانہ بل</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="4">ابھی کوئی ریڈنگ درج نہیں کی گئی۔</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GAS TAB -->
+    <div id="tab-gas" class="tab-view">
+      <div class="card">
+        <h3>🔥 گیس میٹر کی تفصیلات</h3>
+        <p><strong>موجودہ ریڈنگ:</strong> <span id="gas-tab-reading">0</span> Hm3</p>
+        <p><strong>اندازاً بل:</strong> <span id="gas-tab-bill">0</span> روپے</p>
+      </div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div id="tab-analytics" class="tab-view">
+      <div class="card">
+        <h3>📊 ماہانہ استعمال کا تجزیہ</h3>
+        <p>مجموعی استعمال شدہ یونٹس: <strong id="total-units-all">0</strong> یونٹ</p>
+        <p>فی یونٹ طے شدہ ریٹ: <strong id="analytic-rate">30</strong> روپے</p>
+        <p>کل بجلی و گیس کا بل: <strong id="analytic-bill">0</strong> روپے</p>
+      </div>
+    </div>
+
+    <!-- ALERTS TAB -->
+    <div id="tab-alerts" class="tab-view">
+      <div class="card">
+        <h3>🔔 اہم الرٹس اور اعلانات</h3>
+        <div id="alert-list" style="color:#00695c; font-weight:bold;">تمام میٹرز معمول کے مطابق چل رہے ہیں۔</div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="showQuickReading()"><i class="fa-solid fa-camera"></i> ➕ Quick Reading</button>
+  <!-- Quick Reading Modal with Auto Time -->
+  <div class="modal-overlay" id="quickModal">
+    <div class="modal">
+      <h3>➕ نئی ریڈنگ اور یونٹس درج کریں</h3>
+      <label>میٹر منتخب کریں:</label>
+      <select id="readingMeterSelect">
+        <option value="m1">میٹر 1 (گراؤنڈ فلور)</option>
+        <option value="m2">میٹر 2 (اوپر والی منزل)</option>
+        <option value="m3">میٹر 3 (موٹر / ہیوی)</option>
+        <option value="gas">گیس میٹر</option>
+      </select>
+      
+      <label>آج کے استعمال شدہ یونٹس درج کریں:</label>
+      <input type="number" id="readingUnitsInput" placeholder="مثلاً 15 یونٹ">
 
-  <!-- Bottom Nav -->
+      <button class="modal-btn" style="background:#0288d1;" onclick="startCamera()"><i class="fa-solid fa-camera"></i> کیمرہ کھولیں</button>
+      
+      <video id="camera-preview" autoplay playsinline></video>
+      <canvas id="photo-canvas" style="display:none;"></canvas>
+      <img id="photo-preview" alt="میٹر تصویر">
+
+      <button class="modal-btn" id="capture-btn" style="background:#e65100; display:none;" onclick="takePhoto()"><i class="fa-solid fa-circle-dot"></i> تصویر کھینچیں</button>
+
+      <button class="modal-btn" onclick="saveQuickReading()">ریڈنگ محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeQuickModal()">منسوخ کریں</button>
+    </div>
+  </div>
+
+  <!-- Settings Modals -->
+  <div class="modal-overlay" id="rateModal">
+    <div class="modal">
+      <h3>⚙️ فی یونٹ ریٹ تبدیل کریں</h3>
+      <label>ایک یونٹ کی قیمت (روپے میں):</label>
+      <input type="number" id="unitRateInput" value="30">
+      <button class="modal-btn" onclick="saveRate()">ریٹ محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('rateModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="namesModal">
+    <div class="modal">
+      <h3>✏️ میٹرز کے نام تبدیل کریں</h3>
+      <label>میٹر 1 کا نام:</label>
+      <input type="text" id="in-m1" value="میٹر 1 (گراؤنڈ فلور)">
+      <label>میٹر 2 کا نام:</label>
+      <input type="text" id="in-m2" value="میٹر 2 (اوپر والی منزل)">
+      <label>میٹر 3 کا نام:</label>
+      <input type="text" id="in-m3" value="میٹر 3 (موٹر / ہیوی)">
+      <button class="modal-btn" onclick="saveMeterNames()">نام محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('namesModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="limitModal">
+    <div class="modal">
+      <h3>⚙️ کل بجٹ سیٹ کریں</h3>
+      <label>کل بجٹ (روپے میں):</label>
+      <input type="number" id="in-budget" value="30000">
+      <button class="modal-btn" onclick="saveBudget()">بجٹ محفوظ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('limitModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal">
+      <h3>📥 رپورٹس حاصل کریں</h3>
+      <button class="modal-btn" onclick="alert('رپورٹ ڈاؤن لوڈ ہو گئی!')">PDF رپورٹ ڈاؤن لوڈ کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('exportModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="datesModal">
+    <div class="modal">
+      <h3>📅 بل جمع کروانے کی تاریخیں</h3>
+      <p>بجلی کے بل کی آخری تاریخ: 25 تاریخ</p>
+      <p>گیس کے بل کی آخری تاریخ: 18 تاریخ</p>
+      <button class="modal-btn modal-close" onclick="closeModal('datesModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal">
+      <h3>☁️ بیک اپ اور ڈیٹا</h3>
+      <button class="modal-btn" onclick="alert('ڈیٹا محفوظ کر لیا گیا!')">ڈیٹا سیو کریں</button>
+      <button class="modal-btn modal-close" onclick="closeModal('backupModal')">بند کریں</button>
+    </div>
+  </div>
+
+  <!-- Floating Button -->
+  <button class="fab" onclick="openQuickModal()"><i class="fa-solid fa-camera"></i> ➕ نئی ریڈنگ</button>
+
+  <!-- Bottom Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>Dashboard</div>
-    <div class="nav-item" onclick="switchTab('electricity', this)"><i class="fa-solid fa-bolt"></i>Electricity</div>
-    <div class="nav-item" onclick="switchTab('gas', this)"><i class="fa-solid fa-fire"></i>Gas Meter</div>
-    <div class="nav-item" onclick="switchTab('analytics', this)"><i class="fa-solid fa-chart-line"></i>Analytics</div>
-    <div class="nav-item" onclick="switchTab('alerts', this)"><i class="fa-solid fa-bell"></i>Alerts</div>
+    <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>ڈیش بورڈ</div>
+    <div class="nav-item" onclick="switchTab('electricity', this)"><i class="fa-solid fa-bolt"></i>روزانہ ریکارڈ</div>
+    <div class="nav-item" onclick="switchTab('gas', this)"><i class="fa-solid fa-fire"></i>گیس میٹر</div>
+    <div class="nav-item" onclick="switchTab('analytics', this)"><i class="fa-solid fa-chart-line"></i>تجزیہ</div>
+    <div class="nav-item" onclick="switchTab('alerts', this)"><i class="fa-solid fa-bell"></i>الرٹس</div>
   </div>
 
   <script>
+    let videoStream = null;
+    let unitRate = 30;
+    let totalBudget = 30000;
+    let meterData = { m1: 0, m2: 0, m3: 0, gas: 0 };
+
     function toggleDrawer() {
       document.getElementById('sideDrawer').classList.toggle('open');
       let overlay = document.getElementById('drawerOverlay');
@@ -244,12 +418,12 @@
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active');
-      el.classList.add('active');
+      if(el) el.classList.add('active');
     }
 
     function filterMeters() {
       let val = document.getElementById('meterFilter').value;
-      document.getElementById('selectedFilterText').innerText = 'Selected: ' + val;
+      document.getElementById('selectedFilterText').innerText = 'منتخب کردہ: ' + val;
       let cards = document.querySelectorAll('.meter-card');
       cards.forEach(c => {
         if(val === 'all' || c.classList.contains('m-' + val)) {
@@ -260,21 +434,134 @@
       });
     }
 
-    function showQuickReading() {
-      let val = prompt("Enter Current Reading Value:");
-      if(val) alert("ریڈنگ کامیابی سے محفوظ کر لی گئی ہے: " + val);
+    function openModal(id) {
+      if(document.getElementById('sideDrawer').classList.contains('open')) toggleDrawer();
+      document.getElementById(id).style.display = 'flex';
+    }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function openQuickModal() { document.getElementById('quickModal').style.display = 'flex'; }
+    function closeQuickModal() {
+      stopCamera();
+      document.getElementById('quickModal').style.display = 'none';
     }
 
-    // Offline Cache Logic
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swCode = `
-          self.addEventListener('install', e => e.waitUntil(caches.open('app-cache').then(c => c.addAll(['/']))));
-          self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-        `;
-        const blob = new Blob([swCode], { type: 'text/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob));
+    /* Camera Logic */
+    async function startCamera() {
+      const video = document.getElementById('camera-preview');
+      const captureBtn = document.getElementById('capture-btn');
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false
+        });
+        video.srcObject = videoStream;
+        video.style.display = 'block';
+        captureBtn.style.display = 'block';
+      } catch (err) {
+        alert("کیمرہ کی پرمیشن دیں۔");
+      }
+    }
+
+    function takePhoto() {
+      const video = document.getElementById('camera-preview');
+      const canvas = document.getElementById('photo-canvas');
+      const photo = document.getElementById('photo-preview');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      
+      photo.src = canvas.toDataURL('image/png');
+      photo.style.display = 'block';
+      stopCamera();
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+      document.getElementById('camera-preview').style.display = 'none';
+      document.getElementById('capture-btn').style.display = 'none';
+    }
+
+    /* Calculations & Readings */
+    function saveQuickReading() {
+      let meter = document.getElementById('readingMeterSelect').value;
+      let val = parseFloat(document.getElementById('readingUnitsInput').value);
+      
+      if(!isNaN(val)) {
+        meterData[meter] += val;
+        let now = new Date();
+        let timeStr = now.toLocaleDateString('ur-PK') + ' ' + now.toLocaleTimeString('ur-PK', {hour: '2-digit', minute:'2-digit'});
+
+        // Update UI
+        document.getElementById(meter + '-val').innerText = meterData[meter];
+        let bill = meterData[meter] * unitRate;
+        document.getElementById(meter + '-bill').innerText = bill + ' روپے';
+        document.getElementById(meter + '-time').innerText = timeStr;
+
+        // Add Log to Daily Table
+        let tbody = document.getElementById('logTableBody');
+        if(tbody.children[0].children.length === 1) tbody.innerHTML = '';
+        
+        let meterNames = { m1: 'میٹر 1', m2: 'میٹر 2', m3: 'میٹر 3', gas: 'گیس میٹر' };
+        let row = `<tr>
+          <td>${timeStr}</td>
+          <td>${meterNames[meter]}</td>
+          <td>${val}</td>
+          <td>${val * unitRate} روپے</td>
+        </tr>`;
+        tbody.innerHTML = row + tbody.innerHTML;
+
+        updateTotals();
+        alert("ریڈنگ اور وقت کامیابی سے محفوظ ہو گیا!");
+        closeQuickModal();
+      } else {
+        alert("براہ کرم صحیح یونٹ درج کریں!");
+      }
+    }
+
+    function saveRate() {
+      unitRate = parseFloat(document.getElementById('unitRateInput').value) || 30;
+      document.getElementById('banner-rate').innerText = unitRate;
+      document.getElementById('analytic-rate').innerText = unitRate;
+      updateTotals();
+      closeModal('rateModal');
+    }
+
+    function saveBudget() {
+      totalBudget = parseFloat(document.getElementById('in-budget').value) || 30000;
+      document.getElementById('txt-budget').innerText = "کل بجٹ: " + totalBudget + " روپے";
+      updateTotals();
+      closeModal('limitModal');
+    }
+
+    function saveMeterNames() {
+      document.getElementById('label-m1').innerText = document.getElementById('in-m1').value;
+      document.getElementById('label-m2').innerText = document.getElementById('in-m2').value;
+      document.getElementById('label-m3').innerText = document.getElementById('in-m3').value;
+      closeModal('namesModal');
+    }
+
+    function updateTotals() {
+      let totalUnits = meterData.m1 + meterData.m2 + meterData.m3 + meterData.gas;
+      let totalBill = totalUnits * unitRate;
+      let remaining = totalBudget - totalBill;
+
+      // Update Individual Bills
+      ['m1', 'm2', 'm3', 'gas'].forEach(m => {
+        document.getElementById(m + '-bill').innerText = (meterData[m] * unitRate) + ' روپے';
       });
+
+      document.getElementById('txt-total-bill').innerText = "کل اندازاً بل: " + totalBill + " روپے";
+      document.getElementById('txt-remaining').innerText = remaining + " روپے";
+      document.getElementById('gas-tab-reading').innerText = meterData.gas;
+      document.getElementById('gas-tab-bill').innerText = (meterData.gas * unitRate) + " روپے";
+      
+      document.getElementById('total-units-all').innerText = totalUnits;
+      document.getElementById('analytic-bill').innerText = totalBill;
     }
   </script>
 </body>
