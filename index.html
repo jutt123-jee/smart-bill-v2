@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Meter Executive PRO</title>
+  <title>Smart Meter PRO</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root { --primary: #004d40; --accent: #b71c1c; --bg: #f4f6f9; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding-bottom: 85px; color: #222; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding-bottom: 75px; color: #222; }
     
     .header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    
     .alert-banner { background: var(--accent); color: white; padding: 10px; font-weight: bold; display: none; justify-content: space-between; align-items: center; font-size: 13px; }
     .alert-banner button { background: white; color: var(--accent); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-    .balance-card { background: linear-gradient(135deg, #004d40, #00251a); color: white; border-radius: 12px; padding: 18px; margin: 12px 0; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-    .balance-large { font-size: 30px; font-weight: bold; color: #ffca28; margin: 4px 0; }
+    .balance-card { background: linear-gradient(135deg, #004d40, #00251a); color: white; border-radius: 12px; padding: 16px; margin: 12px 0; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .balance-large { font-size: 26px; font-weight: bold; color: #ffca28; margin: 4px 0; }
 
-    .sidebar { position: fixed; right: -320px; top: 0; width: 300px; height: 100%; background: white; z-index: 1000; transition: 0.3s; padding: 15px; box-shadow: -5px 0 15px rgba(0,0,0,0.3); overflow-y: auto; }
+    .sidebar { position: fixed; right: -320px; top: 0; width: 300px; height: 100%; background: white; z-index: 1000; transition: 0.3s; padding: 15px; box-shadow: -5px 0 15px rgba(0,0,0,0.3); overflow-y: auto; box-sizing: border-box; }
     .sidebar.active { right: 0; }
-    .menu-item { padding: 11px 8px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .menu-item { padding: 12px 8px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
 
-    .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #ccc; z-index: 100; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #ccc; z-index: 100; margin: 0; }
     .nav-item { text-align: center; font-size: 11px; color: #555; cursor: pointer; flex: 1; }
     .nav-item i { font-size: 18px; display: block; margin-bottom: 2px; }
     .nav-item.active { color: var(--primary); font-weight: bold; }
@@ -39,51 +38,48 @@
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
     th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
     th { background: #f0f0f0; }
-
     .sub-box { background: #f9f9f9; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px; margin-bottom: 8px; }
+    .alert-item { display: flex; justify-content: space-between; align-items: center; background: #fff3e0; padding: 8px; border-radius: 5px; margin-bottom: 6px; border-right: 4px solid #ff9800; font-size: 12px; }
   </style>
 </head>
 <body>
 
-<!-- Alert Banner -->
+<!-- Alert Voice Banner -->
 <div class="alert-banner" id="topAlertBar">
-  <span id="alertMsg">⚠️ الرٹ: یونٹ حد سے تجاوز کر رہے ہیں!</span>
+  <span id="alertMsg">⚠️ الرٹ: الرٹ متحرک ہے!</span>
   <button onclick="stopVoiceAlarm()">آواز بند کریں 🔇</button>
 </div>
 
-<!-- Top Header -->
+<!-- Header -->
 <div class="header">
   <i class="fa fa-bars" onclick="toggleSidebar(true)" style="cursor:pointer; font-size:18px;"></i>
   <div style="font-weight:bold;">Smart Meter Executive PRO</div>
   <i class="fa fa-bell" onclick="showTab('alerts')" style="cursor:pointer; font-size:18px;"></i>
 </div>
 
-<!-- Side Menu -->
+<!-- Sidebar Menu -->
 <div class="sidebar" id="sidebar">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #004d40; padding-bottom:5px;">
     <h3 style="margin:0; color:#004d40;">سائیڈ مینو</h3>
     <i class="fa fa-times" onclick="toggleSidebar(false)" style="cursor:pointer; font-size:18px;"></i>
   </div>
   
-  <div class="menu-item" onclick="openDataFixModal()">01. Data Fix (سیٹنگز/لیمٹ) <i class="fa fa-database"></i></div>
-  <div class="menu-item" onclick="promptChangeNames()">02. Change Names <i class="fa fa-pen"></i></div>
-  <div class="menu-item" onclick="openSettingsModal()">03. Global Settings & Security <i class="fa fa-cog"></i></div>
+  <div class="menu-item" onclick="openDataFixModal()">01. Data Fix (لمٹ و وائس سیٹنگ) <i class="fa fa-database"></i></div>
+  <div class="menu-item" onclick="openMeterNamesModal()">02. Change Meter Names (نام تبدیل کریں) <i class="fa fa-pen"></i></div>
+  <div class="menu-item" onclick="openSettingsModal()">03. Alarm & System Settings <i class="fa fa-cog"></i></div>
   <div class="menu-item" onclick="window.print()">04. Export PRO (PDF/Excel) <i class="fa fa-file-export"></i></div>
-  <div class="menu-item" onclick="showTab('analysis')">05. Bill History & Restore <i class="fa fa-history"></i></div>
-  <div class="menu-item" onclick="alert('Firebase Cloud Sync Active!')">06. Cloud Sync <i class="fa fa-cloud"></i></div>
-  <div class="menu-item" onclick="promptVal('Admin Security Key:')" style="color:red;">07. Admin Key <i class="fa fa-user-shield"></i></div>
-  <div class="menu-item" onclick="alert('Multi-Device Access Active!')">08. Multi-Device Access <i class="fa fa-laptop"></i></div>
-  <div class="menu-item" onclick="resetAppConfig()" style="color:red;">09. Master Reset / Edit <i class="fa fa-sync-alt"></i></div>
+  <div class="menu-item" onclick="alert('گوگل آن لائن آٹو سیو فعال ہے!')">06. Auto Google Cloud Sync <i class="fa fa-cloud"></i></div>
+  <div class="menu-item" onclick="manageAdminKey()" style="color:red;">07. Admin Key & Security <i class="fa fa-user-shield"></i></div>
+  <div class="menu-item" onclick="alert('متعدد ڈیوائسز کنیکشن فعال ہے!')">08. Multi-Device Sync <i class="fa fa-mobile-alt"></i></div>
+  <div class="menu-item" onclick="resetAppConfig()" style="color:red;">09. Full App Reset <i class="fa fa-sync-alt"></i></div>
   <div class="menu-item" onclick="document.getElementById('billFile').click()">10. Bill Receipt Upload <i class="fa fa-file-invoice"></i></div>
-  <input type="file" id="billFile" style="display:none;" onchange="alert('رسید کامیا بی سے اپلوڈ ہو گئی!')">
+  <input type="file" id="billFile" style="display:none;" onchange="alert('رسید کامیابی سے اپلوڈ ہو گئی!')">
 </div>
 
 <!-- Dashboard Tab -->
 <div id="dashboard" class="tab-content active">
-  
-  <!-- Direct Reading Entry Box (Camera & Extra Date Dropdown Removed) -->
   <div class="card" style="border: 2px solid #004d40; background:#f0fdf4;">
-    <h4 style="margin:0 0 8px 0; color:#004d40;"><i class="fa fa-plus-circle"></i> ڈیش بورڈ ریڈنگ اینٹری</h4>
+    <h4 style="margin:0 0 8px 0; color:#004d40;"><i class="fa fa-plus-circle"></i> ریڈنگ درج کریں</h4>
     <select id="dashMeterInput" onchange="autoLoadDashOldReading()">
       <option value="m1">میٹر 1 (گراؤنڈ)</option>
       <option value="m2">میٹر 2 (اوپر)</option>
@@ -99,57 +95,39 @@
     <button class="btn-main" onclick="saveDashboardEntry()" style="margin-top:6px;">ریڈنگ محفوظ کریں</button>
   </div>
 
-  <!-- 4 Meters Bill Amount Displays -->
   <div class="meter-grid">
-    <div class="meter-box"><b>میٹر 1:</b><br>جمع بل: <span id="dashM1Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
-    <div class="meter-box"><b>میٹر 2:</b><br>جمع بل: <span id="dashM2Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
-    <div class="meter-box"><b>میٹر 3:</b><br>جمع بل: <span id="dashM3Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
-    <div class="meter-box"><b>گیس میٹر:</b><br>جمع بل: <span id="dashGasBill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
+    <div class="meter-box"><b id="lblM1">میٹر 1:</b><br>آخری یونٹس: <span id="dashM1Units" style="color:#004d40; font-weight:bold;">0</span></div>
+    <div class="meter-box"><b id="lblM2">میٹر 2:</b><br>آخری یونٹس: <span id="dashM2Units" style="color:#004d40; font-weight:bold;">0</span></div>
+    <div class="meter-box"><b id="lblM3">میٹر 3:</b><br>آخری یونٹس: <span id="dashM3Units" style="color:#004d40; font-weight:bold;">0</span></div>
+    <div class="meter-box"><b id="lblGas">گیس میٹر:</b><br>HM3: <span id="dashGasUnits" style="color:#004d40; font-weight:bold;">0</span></div>
   </div>
 
-  <!-- Summary Boxes -->
-  <div style="display:flex; gap:8px; margin-bottom:10px;">
-    <div class="card" style="flex:1; margin:0; text-align:center; background:#fff3e0;">
-      <small>فکس رقم (مینو سے):</small><br><b id="dashFixAmt" style="font-size:15px;">30,000 RS</b>
-    </div>
-    <div class="card" style="flex:1; margin:0; text-align:center; background:#e1f5fe;">
-      <small>کل بلوں کی رقم:</small><br><b id="dashTotalBillSum" style="font-size:15px;">0 RS</b>
-    </div>
-  </div>
-
-  <!-- Large Balance Card -->
   <div class="balance-card">
     <div style="font-size:12px;">صافی بقایا رقم (Net Balance)</div>
     <div class="balance-large" id="dashNetBal">30,000 RS</div>
-    <small>حساب کتاب: (فکس رقم - گھر سے جمع شدہ بل)</small>
   </div>
 
-  <!-- 4 Separate Status Cards for Each Meter -->
-  <h4 style="margin:10px 0 6px 0; color:#004d40;">پر میٹر لائیو اسٹیٹس (ریکارڈ سے متحرک)</h4>
+  <h4 style="margin:10px 0 6px 0; color:#004d40;">پر میٹر لائیو اسٹیٹس (دن، گھنٹے، منٹ)</h4>
   <div class="meter-grid">
     <div class="card" style="margin:0; font-size:11px;">
-      <b>میٹر 1 (گراؤنڈ)</b><br>
-      روزانہ یونٹ: <b id="m1Daily">0</b><br>
-      کل یونٹ: <b id="m1Total">0</b><br>
-      دورانیہ: <span id="m1Time">0 دن 0 منٹ</span>
+      <b id="lblM1_sub">میٹر 1</b><br>
+      یونٹس: <b id="m1Total">0</b><br>
+      وقت: <span id="m1Time">0 دن 0 گھنٹے 0 منٹ</span>
     </div>
     <div class="card" style="margin:0; font-size:11px;">
-      <b>میٹر 2 (اوپر)</b><br>
-      روزانہ یونٹ: <b id="m2Daily">0</b><br>
-      کل یونٹ: <b id="m2Total">0</b><br>
-      دورانیہ: <span id="m2Time">0 دن 0 منٹ</span>
+      <b id="lblM2_sub">میٹر 2</b><br>
+      یونٹس: <b id="m2Total">0</b><br>
+      وقت: <span id="m2Time">0 دن 0 گھنٹے 0 منٹ</span>
     </div>
     <div class="card" style="margin:0; font-size:11px;">
-      <b>میٹر 3 (موٹر)</b><br>
-      روزانہ یونٹ: <b id="m3Daily">0</b><br>
-      کل یونٹ: <b id="m3Total">0</b><br>
-      دورانیہ: <span id="m3Time">0 دن 0 منٹ</span>
+      <b id="lblM3_sub">میٹر 3</b><br>
+      یونٹس: <b id="m3Total">0</b><br>
+      وقت: <span id="m3Time">0 دن 0 گھنٹے 0 منٹ</span>
     </div>
     <div class="card" style="margin:0; font-size:11px;">
-      <b>گیس میٹر (SNGPL)</b><br>
-      روزانہ HM3: <b id="gasDaily">0</b><br>
-      کل HM3: <b id="gasTotal">0</b><br>
-      فائنل رزلٹ: <span id="dashGasFormulaRes" style="color:red; font-weight:bold;">0 MMBTU</span>
+      <b>گیس میٹر</b><br>
+      HM3: <b id="gasTotal">0</b><br>
+      نتیجہ: <span id="dashGasFormulaRes" style="color:red; font-weight:bold;">0 MMBTU</span>
     </div>
   </div>
 </div>
@@ -157,57 +135,33 @@
 <!-- Record Tab -->
 <div id="record" class="tab-content">
   <div class="card">
-    <h4>میٹر 1 ہسٹری ٹیبل</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m1Tbody"></tbody></table>
-    <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m1TotRes">0</span> یونٹ</p>
+    <h4>میٹر 1 ہسٹری</h4>
+    <table><thead><tr><th>تاریخ و وقت</th><th>پرانی</th><th>نئی</th><th>یونٹس</th></tr></thead><tbody id="m1Tbody"></tbody></table>
   </div>
   <div class="card">
-    <h4>میٹر 2 ہسٹری ٹیبل</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m2Tbody"></tbody></table>
-    <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m2TotRes">0</span> یونٹ</p>
+    <h4>میٹر 2 ہسٹری</h4>
+    <table><thead><tr><th>تاریخ و وقت</th><th>پرانی</th><th>نئی</th><th>یونٹس</th></tr></thead><tbody id="m2Tbody"></tbody></table>
   </div>
   <div class="card">
-    <h4>میٹر 3 ہسٹری ٹیبل</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m3Tbody"></tbody></table>
-    <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m3TotRes">0</span> یونٹ</p>
+    <h4>میٹر 3 ہسٹری</h4>
+    <table><thead><tr><th>تاریخ و وقت</th><th>پرانی</th><th>نئی</th><th>یونٹس</th></tr></thead><tbody id="m3Tbody"></tbody></table>
   </div>
   <div class="card">
-    <h4>گیس میٹر ہسٹری ٹیبل (HM3)</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>HM3</th><th>ایکشن</th></tr></thead><tbody id="gasTbody"></tbody></table>
-    <p style="font-size:12px;"><b>ٹوٹل گیس HM3:</b> <span id="gasTotRes">0</span> HM3</p>
+    <h4>گیس میٹر ہسٹری (HM3)</h4>
+    <table><thead><tr><th>تاریخ و وقت</th><th>پرانی</th><th>نئی</th><th>HM3</th></tr></thead><tbody id="gasTbody"></tbody></table>
   </div>
 </div>
 
-<!-- Gas Calculation Tab (Separate Input Boxes) -->
+<!-- Gas Tab -->
 <div id="gas" class="tab-content">
   <div class="card">
-    <h3>SNGPL گیس فارمولا ایڈیٹر</h3>
-    
-    <div class="sub-box">
-      <label>1. HM3 ڈفرنس (ریکارڈ سے):</label>
-      <input type="number" id="gasDiffInput" readonly style="background:#eee;">
-    </div>
+    <h3>SNGPL آٹو گیس فارمولا</h3>
+    <div class="sub-box"><label>HM3 ڈفرنس:</label><input type="number" id="gasDiffInput" oninput="autoGasCalc()"></div>
+    <div class="sub-box"><label>پریشر فیکٹر:</label><input type="number" id="gasPF" value="1.0519" oninput="autoGasCalc()"></div>
+    <div class="sub-box"><label>GCV ریٹ:</label><input type="number" id="gasGCV" value="1031" oninput="autoGasCalc()"></div>
 
-    <div class="sub-box">
-      <label>2. پریشر فیکٹر (Pressure Factor):</label>
-      <input type="number" id="gasPF" value="1.0519" step="0.0001">
-    </div>
-
-    <div class="sub-box">
-      <label>3. GCV ریٹ:</label>
-      <input type="number" id="gasGCV" value="1031">
-    </div>
-
-    <div class="sub-box">
-      <label>4. مینول MMBTU ایڈیٹ (اگر فارمولا سے غلط آئے):</label>
-      <input type="number" id="gasManualOverride" placeholder="اپنا MMBTU رزلٹ درج کریں">
-    </div>
-
-    <button class="btn-main" onclick="runGasFormula()">فارمولا اپلائی کریں</button>
-
-    <!-- Large Gas Result Display -->
     <div class="balance-card" style="background:#b71c1c; margin-top:12px;">
-      <small>فائنل گیس MMBTU رزلٹ</small>
+      <small>آٹو MMBTU رزلٹ</small>
       <div class="balance-large" id="gasMmbtuOutput">0.0000</div>
     </div>
   </div>
@@ -216,63 +170,25 @@
 <!-- Analysis Tab -->
 <div id="analysis" class="tab-content">
   <div class="card">
-    <h3>بل ادائیگی ریکارڈ</h3>
-    <select id="payMeterSelect">
+    <h3>بل آخری تاریخ وائس الرٹ</h3>
+    <select id="dueDateMeterSelect">
       <option value="m1">میٹر 1</option><option value="m2">میٹر 2</option>
       <option value="m3">میٹر 3</option><option value="gas">گیس میٹر</option>
     </select>
-    <select id="paySourceSelect">
-      <option value="house">گھر سے ہوا (فکس رقم سے مائنس ہوگا)</option>
-      <option value="outside">باہر سے ہوا (بجٹ مائنس نہیں ہوگا)</option>
-    </select>
-    <input type="number" id="payAmtInput" placeholder="ادائیگی رقم">
-    <button class="btn-main" onclick="addPaymentRecord()">ادائیگی سیو کریں</button>
-
-    <table>
-      <thead><tr><th>تاریخ</th><th>رقم</th><th>ذریعہ</th></tr></thead>
-      <tbody id="payHistoryTbody"></tbody>
-    </table>
-  </div>
-
-  <!-- Comparison Section -->
-  <div class="card">
-    <h4>پچھلے اور نئے بل کا موازنہ</h4>
-    <div style="display:flex; gap:8px;">
-      <div class="sub-box" style="flex:1;">
-        <small>پچھلا بل:</small>
-        <input type="number" id="prevBillInput" value="5000" onchange="calcBillDiff()">
-      </div>
-      <div class="sub-box" style="flex:1;">
-        <small>نیا بل (تاریخ کے ساتھ):</small>
-        <input type="text" id="currBillInput" value="3800 RS (20 Aug)" readonly>
-      </div>
-    </div>
-
-    <!-- Large Result Comparison Box -->
-    <div class="balance-card" style="background:#1b5e20;">
-      <small>بل کا فرق (فرق کا نتیجہ)</small>
-      <div class="balance-large" id="billDiffResult">1,200 RS کم</div>
-    </div>
+    <label>آخری تاریخ سیٹ کریں:</label>
+    <input type="date" id="meterDueDateInput" onchange="checkDueDateAlert()">
   </div>
 </div>
 
-<!-- Alerts Tab (9 Urdu Voice Alarms) -->
+<!-- Alerts Tab -->
 <div id="alerts" class="tab-content">
   <div class="card">
-    <h3>صوتی الرٹ ایڈیٹر (9 پیغامات)</h3>
-    <label><input type="checkbox" id="soundToggle" checked> صوتی الرٹس فعال رکھیں (Sound ON/OFF)</label>
-    <hr>
-    <input type="text" id="v1" value="ریڈنگ ایڈ نہیں ہوئی!">
-    <input type="text" id="v2" value="بل کی ڈیو ڈیٹ گزر رہی ہے!">
-    <input type="text" id="v3" value="یونٹ زیادہ ہو گئے ہیں، میٹر چینج کریں!">
-    <input type="text" id="v4" value="آج اس میٹر پر زیادہ یونٹ استعمال ہوئے ہیں!">
-    <input type="text" id="v5" value="اس میٹر کی ریڈنگ ابھی باقی ہے!">
-    <input type="text" id="v6" value="آج سیٹ کی ہوئی لمٹ سے زیادہ یونٹ استعمال ہو گئے!">
-    <input type="text" id="v7" value="یونٹ ریٹ یا ڈیو ڈیٹ ایڈ نہیں کی گئی!">
-    <input type="text" id="v8" value="ماہانہ لمٹ فکس نہیں کی گئی!">
-    <input type="text" id="v9" value="اس مہینے کا بل پے کرنے کے بعد ایپ میں ایڈ نہیں کیا گیا!">
-    
-    <button class="btn-main" onclick="testVoice(document.getElementById('v1').value)" style="margin-top:8px;">ٹیسٹ الرٹ 🔊</button>
+    <h3>الرٹ اینٹری بکس (وائس الارم سپورٹ)</h3>
+    <input type="text" id="customAlertInput" placeholder="مثال: تاریخ گزر گئی ہے یا یونٹ لمٹ کراس ہو گئی...">
+    <button class="btn-main" onclick="addCustomAlert()" style="margin-top:6px;">الرٹ شامل اور ٹیسٹ کریں</button>
+
+    <h4 style="margin-top:12px;">فعال الرٹس لسٹ:</h4>
+    <div id="alertsListContainer"></div>
   </div>
 </div>
 
@@ -286,35 +202,88 @@
 </div>
 
 <script>
-  let lastReadings = { m1: 100, m2: 250, m3: 80, gas: 1.2 };
-  let synth = window.speechSynthesis;
+  let appData = JSON.parse(localStorage.getItem('smartMeterData')) || {
+    lastReadings: { m1: 100, m2: 250, m3: 80, gas: 1.2 },
+    limits: { m1: 10, m2: 10, m3: 10, gas: 5 },
+    meterNames: { m1: "میٹر 1", m2: "میٹر 2", m3: "میٹر 3" },
+    history: { m1: [], m2: [], m3: [], gas: [] },
+    alerts: ["تاریخ گزر گئی ہے!"],
+    adminKey: "1234"
+  };
 
-  function toggleSidebar(s) { document.getElementById('sidebar').classList.toggle('active', s); }
-  function promptVal(m) { let v = prompt(m); if(v) alert("محفوظ ہو گیا: " + v); }
-  
-  function openDataFixModal() {
-    let m = prompt("01. Data Fix:\nمیٹر منتخب کریں (m1, m2, m3, gas):", "m1");
-    if(m) {
-      let limit = prompt("روزانہ یونٹ لیمٹ درج کریں:");
-      let rate = prompt("فکس یونٹ ریٹ درج کریں:");
-      let fixAmt = prompt("ماہانہ فکس بجٹ درج کریں:", "30000");
-      if(fixAmt) document.getElementById('dashFixAmt').innerText = fixAmt + " RS";
-      updateBalance();
-      alert("ڈیٹا سیٹ ہو گیا!");
+  function saveData() {
+    localStorage.setItem('smartMeterData', JSON.stringify(appData));
+  }
+
+  function speakUrduAlert(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      let msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'ur-PK';
+      msg.rate = 0.9;
+      window.speechSynthesis.speak(msg);
     }
   }
 
-  function promptChangeNames() { prompt("میٹر کا نیا نام درج کریں:"); }
+  function triggerSystemAlert(alertText) {
+    document.getElementById('topAlertBar').style.display = 'flex';
+    document.getElementById('alertMsg').innerText = "⚠️ الرٹ: " + alertText;
+    speakUrduAlert(alertText);
+  }
+
+  function stopVoiceAlarm() {
+    document.getElementById('topAlertBar').style.display = 'none';
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  function toggleSidebar(s) { document.getElementById('sidebar').classList.toggle('active', s); }
+
+  function openDataFixModal() {
+    let m = prompt("01. Data Fix:\nمیٹر کوڈ درج کریں (m1, m2, m3, gas):", "m1");
+    if(m && appData.limits[m] !== undefined) {
+      let limit = prompt("روزانہ یونٹ لمٹ درج کریں:", appData.limits[m]);
+      if(limit) {
+        appData.limits[m] = parseFloat(limit);
+        saveData();
+        alert("لمٹ سیٹ ہو گئی!");
+      }
+    }
+  }
+
+  function openMeterNamesModal() {
+    let m = prompt("02. Change Names:\nمیٹر منتخب کریں (m1, m2, m3):", "m1");
+    let newName = prompt("نیا نام درج کریں:");
+    if(m && newName && appData.meterNames[m]) {
+      appData.meterNames[m] = newName;
+      saveData();
+      renderMeterNames();
+      alert("نام تبدیل ہو گیا!");
+    }
+  }
+
+  function renderMeterNames() {
+    document.getElementById('lblM1').innerText = appData.meterNames.m1 + ":";
+    document.getElementById('lblM1_sub').innerText = appData.meterNames.m1;
+    document.getElementById('lblM2').innerText = appData.meterNames.m2 + ":";
+    document.getElementById('lblM2_sub').innerText = appData.meterNames.m2;
+    document.getElementById('lblM3').innerText = appData.meterNames.m3 + ":";
+    document.getElementById('lblM3_sub').innerText = appData.meterNames.m3;
+  }
 
   function openSettingsModal() {
-    alert("سیٹنگز مینو:\n1. ساؤنڈ (ON/OFF)\n2. نوٹیفکیشن (ON/OFF)\n3. پاسورڈ تبدیل / ریسیٹ\n4. بیل ساؤنڈ چینج\n5. الارم ٹائمر");
+    alert("03. System Settings:\n- الارم نوٹیفکیشن: Active\n- اسپیچ الرٹ: Enabled\n- پاسورڈ سیکیورٹی: Active");
+  }
+
+  function manageAdminKey() {
+    let k = prompt("ایڈمن سیکیورٹی کی درج کریں:", appData.adminKey);
+    if(k === appData.adminKey) {
+      let nk = prompt("نئی ایڈمن کی درج کریں:", appData.adminKey);
+      if(nk) { appData.adminKey = nk; saveData(); alert("ایڈمن کی تبدیل ہو گئی!"); }
+    } else alert("غلط کی!");
   }
 
   function resetAppConfig() {
-    if(confirm("کیا آپ واقعی پوری ایپ کا ڈیٹا ری سیٹ کرنا چاہتے ہیں؟")) {
-      localStorage.clear();
-      location.reload();
-    }
+    if(confirm("پوری ایپ کا ڈیٹا ری سیٹ کریں؟")) { localStorage.clear(); location.reload(); }
   }
 
   function showTab(id, el) {
@@ -328,51 +297,58 @@
 
   function autoLoadDashOldReading() {
     let m = document.getElementById('dashMeterInput').value;
-    document.getElementById('dashOldR').value = lastReadings[m] || 0;
+    document.getElementById('dashOldR').value = appData.lastReadings[m] || 0;
   }
 
   function saveDashboardEntry() {
     let m = document.getElementById('dashMeterInput').value;
-    let oldR = lastReadings[m] || 0;
+    let oldR = appData.lastReadings[m] || 0;
     let newR = parseFloat(document.getElementById('dashNewR').value) || 0;
     if(newR <= oldR) { alert("نئی ریڈنگ پرانی سے زیادہ ہونی چاہیے!"); return; }
 
     let diff = newR - oldR;
-    lastReadings[m] = newR;
+    appData.lastReadings[m] = newR;
     
     let dt = new Date();
-    let timeStr = dt.toLocaleDateString('ur-PK') + ' ' + dt.getHours() + ':' + dt.getMinutes();
+    let timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let dateStr = dt.toLocaleDateString();
 
-    let tbodyId = m + 'Tbody';
-    document.getElementById(tbodyId).innerHTML += `<tr><td>${timeStr}</td><td>${oldR}</td><td>${newR}</td><td>${diff}</td><td><button style="color:red;" onclick="this.parentElement.parentElement.remove()">🗑️</button></td></tr>`;
+    let entry = { date: dateStr + ' ' + timeStr, oldR, newR, diff };
+    appData.history[m].unshift(entry);
+    saveData();
 
-    // Update Meter Live Status Cards
-    if(m === 'gas') {
-      document.getElementById('gasTotRes').innerText = diff;
-      document.getElementById('gasDaily').innerText = diff;
-      document.getElementById('gasTotal').innerText = diff;
-      document.getElementById('gasDiffInput').value = diff;
-    } else {
-      document.getElementById(m + 'TotRes').innerText = diff;
-      document.getElementById(m + 'Daily').innerText = diff;
-      document.getElementById(m + 'Total').innerText = diff;
-      document.getElementById(m + 'Time').innerText = "0 دن 1 منٹ";
+    renderHistory();
+    document.getElementById(m + 'Total').innerText = diff;
+    document.getElementById(m + 'Time').innerText = "0 دن 0 گھنٹے 1 منٹ";
+
+    if(diff > appData.limits[m]) {
+      triggerSystemAlert("توجہ فرمائیں! " + m + " کے یونٹ مقررہ لمٹ سے تجاوز کر گئے ہیں!");
     }
-    
+
+    if(m === 'gas') {
+      document.getElementById('gasDiffInput').value = diff;
+      autoGasCalc();
+    }
+
     autoLoadDashOldReading();
     document.getElementById('dashNewR').value = '';
-    alert("ریڈنگ محفوظ ہو کر ریکارڈ میں شامل ہو گئی!");
+    alert("ریڈنگ سیو ہو کر ہسٹری میں چلی گئی!");
   }
 
-  function runGasFormula() {
-    let manual = parseFloat(document.getElementById('gasManualOverride').value);
-    if(!isNaN(manual)) {
-      document.getElementById('gasMmbtuOutput').innerText = manual.toFixed(4);
-      document.getElementById('dashGasFormulaRes').innerText = manual.toFixed(4) + " MMBTU";
-      alert("مینول MMBTU اپلائی ہو گیا!");
-      return;
-    }
+  function renderHistory() {
+    ['m1', 'm2', 'm3', 'gas'].forEach(m => {
+      let tbody = document.getElementById(m + 'Tbody');
+      tbody.innerHTML = '';
+      appData.history[m].forEach(h => {
+        tbody.innerHTML += `<tr><td>${h.date}</td><td>${h.oldR}</td><td>${h.newR}</td><td>${h.diff}</td></tr>`;
+      });
+      if(m !== 'gas' && document.getElementById('dash' + m.toUpperCase() + 'Units')) {
+        document.getElementById('dash' + m.toUpperCase() + 'Units').innerText = appData.history[m][0] ? appData.history[m][0].diff : 0;
+      }
+    });
+  }
 
+  function autoGasCalc() {
     let diff = parseFloat(document.getElementById('gasDiffInput').value) || 0;
     let pf = parseFloat(document.getElementById('gasPF').value) || 1.0519;
     let gcv = parseFloat(document.getElementById('gasGCV').value) || 1031;
@@ -380,68 +356,50 @@
     
     document.getElementById('gasMmbtuOutput').innerText = mmbtu.toFixed(4);
     document.getElementById('dashGasFormulaRes').innerText = mmbtu.toFixed(4) + " MMBTU";
-    alert("گیس فارمولا اپلائی ہو گیا!");
   }
 
-  function addPaymentRecord() {
-    let m = document.getElementById('payMeterSelect').value;
-    let src = document.getElementById('paySourceSelect').value;
-    let amt = parseFloat(document.getElementById('payAmtInput').value) || 0;
-    let dt = new Date().toLocaleDateString();
-
-    document.getElementById('payHistoryTbody').innerHTML += `<tr><td>${dt}</td><td>${amt} RS</td><td>${src === 'house' ? 'گھر سے' : 'باہر سے'}</td></tr>`;
-
-    if(m === 'm1') document.getElementById('dashM1Bill').innerText = amt + " RS";
-    if(m === 'm2') document.getElementById('dashM2Bill').innerText = amt + " RS";
-    if(m === 'm3') document.getElementById('dashM3Bill').innerText = amt + " RS";
-    if(m === 'gas') document.getElementById('dashGasBill').innerText = amt + " RS";
-
-    if(src === 'house') {
-      let curTot = parseFloat(document.getElementById('dashTotalBillSum').innerText) || 0;
-      let newTot = curTot + amt;
-      document.getElementById('dashTotalBillSum').innerText = newTot + " RS";
-      document.getElementById('currBillInput').value = amt + " RS (" + dt + ")";
-      updateBalance();
-      calcBillDiff();
-    }
-    alert("ادائیگی درج ہو گئی!");
-  }
-
-  function calcBillDiff() {
-    let prev = parseFloat(document.getElementById('prevBillInput').value) || 0;
-    let curr = parseFloat(document.getElementById('dashTotalBillSum').innerText) || 0;
-    let diff = prev - curr;
-    
-    if(diff >= 0) {
-      document.getElementById('billDiffResult').innerText = diff + " RS کم";
-    } else {
-      document.getElementById('billDiffResult').innerText = Math.abs(diff) + " RS زیادہ";
+  function checkDueDateAlert() {
+    let d = document.getElementById('meterDueDateInput').value;
+    if(d) {
+      let today = new Date().toISOString().split('T')[0];
+      if(d <= today) {
+        triggerSystemAlert("توجہ فرمائیں! بل کی آخری تاریخ گزر گئی ہے!");
+      } else {
+        alert("آخری تاریخ محفوظ کر لی گئی ہے!");
+      }
     }
   }
 
-  function updateBalance() {
-    let fix = parseFloat(document.getElementById('dashFixAmt').innerText) || 0;
-    let paid = parseFloat(document.getElementById('dashTotalBillSum').innerText) || 0;
-    document.getElementById('dashNetBal').innerText = (fix - paid) + " RS";
+  function addCustomAlert() {
+    let txt = document.getElementById('customAlertInput').value;
+    if(!txt) return;
+
+    appData.alerts.push(txt);
+    saveData();
+    renderAlerts();
+
+    triggerSystemAlert(txt);
+    document.getElementById('customAlertInput').value = '';
   }
 
-  function testVoice(text) {
-    if(!document.getElementById('soundToggle').checked) return;
-    document.getElementById('topAlertBar').style.display = 'flex';
-    document.getElementById('alertMsg').innerText = "⚠️ الرٹ: " + text;
-
-    if('speechSynthesis' in window) {
-      let utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ur-PK';
-      synth.speak(utter);
-    }
+  function renderAlerts() {
+    let container = document.getElementById('alertsListContainer');
+    container.innerHTML = '';
+    appData.alerts.forEach((alt, idx) => {
+      container.innerHTML += `<div class="alert-item"><span>${alt}</span><div><button onclick="speakUrduAlert('${alt}')">🔊</button> <button onclick="deleteAlert(${idx})">🗑️</button></div></div>`;
+    });
   }
 
-  function stopVoiceAlarm() {
-    document.getElementById('topAlertBar').style.display = 'none';
-    if(synth) synth.cancel();
+  function deleteAlert(idx) {
+    appData.alerts.splice(idx, 1);
+    saveData();
+    renderAlerts();
   }
 
+  // Load Saved State On Page Reload
+  renderMeterNames();
+  renderHistory();
+  renderAlerts();
   autoLoadDashOldReading();
 </script>
 
