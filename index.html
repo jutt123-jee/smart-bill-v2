@@ -3,28 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Meter Executive PRO - Final</title>
+  <title>Smart Meter Executive PRO</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root { --primary: #004d40; --accent: #b71c1c; --bg: #f4f6f9; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #222; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding-bottom: 85px; color: #222; }
     
     .header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     
-    /* Persistent Red Alert Banner */
     .alert-banner { background: var(--accent); color: white; padding: 10px; font-weight: bold; display: none; justify-content: space-between; align-items: center; font-size: 13px; }
     .alert-banner button { background: white; color: var(--accent); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-    /* Large Balance Card */
     .balance-card { background: linear-gradient(135deg, #004d40, #00251a); color: white; border-radius: 12px; padding: 18px; margin: 12px 0; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .balance-large { font-size: 30px; font-weight: bold; color: #ffca28; margin: 4px 0; }
 
-    /* Sidebar Menu */
-    .sidebar { position: fixed; right: -320px; top: 0; width: 290px; height: 100%; background: white; z-index: 1000; transition: 0.3s; padding: 15px; box-shadow: -5px 0 15px rgba(0,0,0,0.3); overflow-y: auto; }
+    .sidebar { position: fixed; right: -320px; top: 0; width: 300px; height: 100%; background: white; z-index: 1000; transition: 0.3s; padding: 15px; box-shadow: -5px 0 15px rgba(0,0,0,0.3); overflow-y: auto; }
     .sidebar.active { right: 0; }
     .menu-item { padding: 11px 8px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
 
-    /* Bottom Nav Bar */
     .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #ccc; z-index: 100; }
     .nav-item { text-align: center; font-size: 11px; color: #555; cursor: pointer; flex: 1; }
     .nav-item i { font-size: 18px; display: block; margin-bottom: 2px; }
@@ -34,57 +30,58 @@
     .tab-content.active { display: block; }
     .card { background: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     
-    /* Meter Grid */
     .meter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .meter-box { background: #e8f5e9; padding: 8px; border-radius: 6px; border: 1px solid #c8e6c9; font-size: 12px; }
+    .meter-box { background: #e8f5e9; padding: 10px; border-radius: 6px; border: 1px solid #c8e6c9; font-size: 12px; }
     
-    input, select, button { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
-    button.btn-main { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-    .camera-btn { background: #0288d1; color: white; padding: 8px; text-align:center; border-radius: 4px; cursor: pointer; display: block; font-size: 12px; }
+    input, select, button { width: 100%; padding: 9px; margin: 4px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 12px; }
+    button.btn-main { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
-    th, td { border: 1px solid #ddd; padding: 5px; text-align: center; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
     th { background: #f0f0f0; }
+
+    .sub-box { background: #f9f9f9; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
 
-<!-- Persistent Alert Banner -->
+<!-- Alert Banner -->
 <div class="alert-banner" id="topAlertBar">
-  <span id="alertMsg">⚠️ الرٹ: کوئی مسئلہ درپیش ہے!</span>
+  <span id="alertMsg">⚠️ الرٹ: یونٹ حد سے تجاوز کر رہے ہیں!</span>
   <button onclick="stopVoiceAlarm()">آواز بند کریں 🔇</button>
 </div>
 
-<!-- Header -->
+<!-- Top Header -->
 <div class="header">
   <i class="fa fa-bars" onclick="toggleSidebar(true)" style="cursor:pointer; font-size:18px;"></i>
   <div style="font-weight:bold;">Smart Meter Executive PRO</div>
   <i class="fa fa-bell" onclick="showTab('alerts')" style="cursor:pointer; font-size:18px;"></i>
 </div>
 
-<!-- Sidebar Menu (01 to 10) -->
+<!-- Side Menu -->
 <div class="sidebar" id="sidebar">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #004d40; padding-bottom:5px;">
     <h3 style="margin:0; color:#004d40;">سائیڈ مینو</h3>
     <i class="fa fa-times" onclick="toggleSidebar(false)" style="cursor:pointer; font-size:18px;"></i>
   </div>
-  <div class="menu-item" onclick="promptFixData()">01. Data Fix (ریٹ/لیمٹ/ڈیو ڈیٹ) <i class="fa fa-database"></i></div>
+  
+  <div class="menu-item" onclick="openDataFixModal()">01. Data Fix (سیٹنگز/لیمٹ) <i class="fa fa-database"></i></div>
   <div class="menu-item" onclick="promptChangeNames()">02. Change Names <i class="fa fa-pen"></i></div>
-  <div class="menu-item" onclick="alert('گلوبل سیٹنگز کھولی جا رہی ہیں...')">03. Global Settings <i class="fa fa-cog"></i></div>
+  <div class="menu-item" onclick="openSettingsModal()">03. Global Settings & Security <i class="fa fa-cog"></i></div>
   <div class="menu-item" onclick="window.print()">04. Export PRO (PDF/Excel) <i class="fa fa-file-export"></i></div>
-  <div class="menu-item" onclick="showTab('analysis')">05. Bill History & Edit <i class="fa fa-history"></i></div>
-  <div class="menu-item" onclick="alert('Firebase Cloud Backup Active!')">06. Cloud Sync <i class="fa fa-cloud"></i></div>
+  <div class="menu-item" onclick="showTab('analysis')">05. Bill History & Restore <i class="fa fa-history"></i></div>
+  <div class="menu-item" onclick="alert('Firebase Cloud Sync Active!')">06. Cloud Sync <i class="fa fa-cloud"></i></div>
   <div class="menu-item" onclick="promptVal('Admin Security Key:')" style="color:red;">07. Admin Key <i class="fa fa-user-shield"></i></div>
-  <div class="menu-item" onclick="alert('Multi-Device Access Ready!')">08. Multi-Device Access <i class="fa fa-laptop"></i></div>
-  <div class="menu-item" onclick="alert('Master Edit Activated!')">09. Master Edit / Delete <i class="fa fa-edit"></i></div>
+  <div class="menu-item" onclick="alert('Multi-Device Access Active!')">08. Multi-Device Access <i class="fa fa-laptop"></i></div>
+  <div class="menu-item" onclick="resetAppConfig()" style="color:red;">09. Master Reset / Edit <i class="fa fa-sync-alt"></i></div>
   <div class="menu-item" onclick="document.getElementById('billFile').click()">10. Bill Receipt Upload <i class="fa fa-file-invoice"></i></div>
-  <input type="file" id="billFile" style="display:none;" onchange="alert('رسید محفوظ ہو گئی!')">
+  <input type="file" id="billFile" style="display:none;" onchange="alert('رسید کامیا بی سے اپلوڈ ہو گئی!')">
 </div>
 
 <!-- Dashboard Tab -->
 <div id="dashboard" class="tab-content active">
   
-  <!-- Direct Dashboard Reading Entry Box with Camera -->
+  <!-- Direct Reading Entry Box (Camera & Extra Date Dropdown Removed) -->
   <div class="card" style="border: 2px solid #004d40; background:#f0fdf4;">
     <h4 style="margin:0 0 8px 0; color:#004d40;"><i class="fa fa-plus-circle"></i> ڈیش بورڈ ریڈنگ اینٹری</h4>
     <select id="dashMeterInput" onchange="autoLoadDashOldReading()">
@@ -96,26 +93,21 @@
     
     <div style="display:flex; gap:6px;">
       <input type="number" id="dashOldR" placeholder="پرانی ریڈنگ" readonly style="background:#eee;">
-      <input type="number" id="dashNewR" placeholder="نئی ریڈنگ">
-    </div>
-
-    <div style="display:flex; gap:6px; align-items:center;">
-      <input type="datetime-local" id="dashReadTime" style="flex:2;">
-      <label class="camera-btn" style="flex:1;"><i class="fa fa-camera"></i> کیمرہ <input type="file" accept="image/*" capture="camera" style="display:none;"></label>
+      <input type="number" id="dashNewR" placeholder="نئی ریڈنگ درج کریں">
     </div>
 
     <button class="btn-main" onclick="saveDashboardEntry()" style="margin-top:6px;">ریڈنگ محفوظ کریں</button>
   </div>
 
-  <!-- 4 Meters Paid Bill Boxes -->
+  <!-- 4 Meters Bill Amount Displays -->
   <div class="meter-grid">
-    <div class="meter-box"><b>میٹر 1 (گراؤنڈ):</b><br>جمع بل: <span id="dashM1Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
-    <div class="meter-box"><b>میٹر 2 (اوپر):</b><br>جمع بل: <span id="dashM2Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
-    <div class="meter-box"><b>میٹر 3 (موٹر):</b><br>جمع بل: <span id="dashM3Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
+    <div class="meter-box"><b>میٹر 1:</b><br>جمع بل: <span id="dashM1Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
+    <div class="meter-box"><b>میٹر 2:</b><br>جمع بل: <span id="dashM2Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
+    <div class="meter-box"><b>میٹر 3:</b><br>جمع بل: <span id="dashM3Bill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
     <div class="meter-box"><b>گیس میٹر:</b><br>جمع بل: <span id="dashGasBill" style="color:#004d40; font-weight:bold;">0 RS</span></div>
   </div>
 
-  <!-- Two Summary Boxes -->
+  <!-- Summary Boxes -->
   <div style="display:flex; gap:8px; margin-bottom:10px;">
     <div class="card" style="flex:1; margin:0; text-align:center; background:#fff3e0;">
       <small>فکس رقم (مینو سے):</small><br><b id="dashFixAmt" style="font-size:15px;">30,000 RS</b>
@@ -132,53 +124,92 @@
     <small>حساب کتاب: (فکس رقم - گھر سے جمع شدہ بل)</small>
   </div>
 
-  <!-- Live Status & Time Calculations -->
-  <div class="card">
-    <h4 style="margin:0 0 6px 0;">پر میٹر اسٹیٹس و وقت کا حساب</h4>
-    <p style="margin:3px 0; font-size:12px;"><b>وقت کا دورانیہ:</b> <span id="dashTimeDiff">0 دن / 0 گھنٹے / 0 منٹ</span></p>
-    <p style="margin:3px 0; font-size:12px; color:#b71c1c;"><b>گیس فارمولا فائنل رزلٹ:</b> <span id="dashGasFormulaRes">0 MMBTU</span></p>
+  <!-- 4 Separate Status Cards for Each Meter -->
+  <h4 style="margin:10px 0 6px 0; color:#004d40;">پر میٹر لائیو اسٹیٹس (ریکارڈ سے متحرک)</h4>
+  <div class="meter-grid">
+    <div class="card" style="margin:0; font-size:11px;">
+      <b>میٹر 1 (گراؤنڈ)</b><br>
+      روزانہ یونٹ: <b id="m1Daily">0</b><br>
+      کل یونٹ: <b id="m1Total">0</b><br>
+      دورانیہ: <span id="m1Time">0 دن 0 منٹ</span>
+    </div>
+    <div class="card" style="margin:0; font-size:11px;">
+      <b>میٹر 2 (اوپر)</b><br>
+      روزانہ یونٹ: <b id="m2Daily">0</b><br>
+      کل یونٹ: <b id="m2Total">0</b><br>
+      دورانیہ: <span id="m2Time">0 دن 0 منٹ</span>
+    </div>
+    <div class="card" style="margin:0; font-size:11px;">
+      <b>میٹر 3 (موٹر)</b><br>
+      روزانہ یونٹ: <b id="m3Daily">0</b><br>
+      کل یونٹ: <b id="m3Total">0</b><br>
+      دورانیہ: <span id="m3Time">0 دن 0 منٹ</span>
+    </div>
+    <div class="card" style="margin:0; font-size:11px;">
+      <b>گیس میٹر (SNGPL)</b><br>
+      روزانہ HM3: <b id="gasDaily">0</b><br>
+      کل HM3: <b id="gasTotal">0</b><br>
+      فائنل رزلٹ: <span id="dashGasFormulaRes" style="color:red; font-weight:bold;">0 MMBTU</span>
+    </div>
   </div>
 </div>
 
-<!-- Record Tab (4 History Tables) -->
+<!-- Record Tab -->
 <div id="record" class="tab-content">
   <div class="card">
-    <h4>میٹر 1 ہسٹری</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹ</th><th>ایکشن</th></tr></thead><tbody id="m1Tbody"></tbody></table>
+    <h4>میٹر 1 ہسٹری ٹیبل</h4>
+    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m1Tbody"></tbody></table>
     <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m1TotRes">0</span> یونٹ</p>
   </div>
   <div class="card">
-    <h4>میٹر 2 ہسٹری</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹ</th><th>ایکشن</th></tr></thead><tbody id="m2Tbody"></tbody></table>
+    <h4>میٹر 2 ہسٹری ٹیبل</h4>
+    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m2Tbody"></tbody></table>
     <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m2TotRes">0</span> یونٹ</p>
   </div>
   <div class="card">
-    <h4>میٹر 3 ہسٹری</h4>
-    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹ</th><th>ایکشن</th></tr></thead><tbody id="m3Tbody"></tbody></table>
+    <h4>میٹر 3 ہسٹری ٹیبل</h4>
+    <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>صافی یونٹس</th><th>ایکشن</th></tr></thead><tbody id="m3Tbody"></tbody></table>
     <p style="font-size:12px;"><b>ٹوٹل استعمال:</b> <span id="m3TotRes">0</span> یونٹ</p>
   </div>
   <div class="card">
-    <h4>گیس میٹر ہسٹری (HM3)</h4>
+    <h4>گیس میٹر ہسٹری ٹیبل (HM3)</h4>
     <table><thead><tr><th>تاریخ/دن/منٹ</th><th>پرانی</th><th>نئی</th><th>HM3</th><th>ایکشن</th></tr></thead><tbody id="gasTbody"></tbody></table>
     <p style="font-size:12px;"><b>ٹوٹل گیس HM3:</b> <span id="gasTotRes">0</span> HM3</p>
   </div>
 </div>
 
-<!-- Gas Calculation Tab -->
+<!-- Gas Calculation Tab (Separate Input Boxes) -->
 <div id="gas" class="tab-content">
   <div class="card">
     <h3>SNGPL گیس فارمولا ایڈیٹر</h3>
-    <label>HM3 ڈفرنس (ریکارڈ سے):</label>
-    <input type="number" id="gasDiffInput" readonly style="background:#eee;">
-
-    <label>فارمولا ترتیب دیں:</label>
-    <div style="background:#f9f9f9; padding:6px; border:1px solid #ddd; font-size:11px; margin-bottom:5px;">
-      فارمولا: <b>(HM3 × Pressure × 1031) / 28173.85</b>
+    
+    <div class="sub-box">
+      <label>1. HM3 ڈفرنس (ریکارڈ سے):</label>
+      <input type="number" id="gasDiffInput" readonly style="background:#eee;">
     </div>
-    <input type="number" id="gasPF" value="1.0519" step="0.0001" placeholder="پریشر فیکٹر">
+
+    <div class="sub-box">
+      <label>2. پریشر فیکٹر (Pressure Factor):</label>
+      <input type="number" id="gasPF" value="1.0519" step="0.0001">
+    </div>
+
+    <div class="sub-box">
+      <label>3. GCV ریٹ:</label>
+      <input type="number" id="gasGCV" value="1031">
+    </div>
+
+    <div class="sub-box">
+      <label>4. مینول MMBTU ایڈیٹ (اگر فارمولا سے غلط آئے):</label>
+      <input type="number" id="gasManualOverride" placeholder="اپنا MMBTU رزلٹ درج کریں">
+    </div>
 
     <button class="btn-main" onclick="runGasFormula()">فارمولا اپلائی کریں</button>
-    <h4 style="margin:8px 0 0 0; color:#b71c1c;">نتیجہ: <span id="gasMmbtuOutput">0</span> MMBTU</h4>
+
+    <!-- Large Gas Result Display -->
+    <div class="balance-card" style="background:#b71c1c; margin-top:12px;">
+      <small>فائنل گیس MMBTU رزلٹ</small>
+      <div class="balance-large" id="gasMmbtuOutput">0.0000</div>
+    </div>
   </div>
 </div>
 
@@ -203,13 +234,29 @@
     </table>
   </div>
 
-  <div class="card" style="background:#e8eaf6;">
-    <h4 style="margin-top:0;">پچھلے مہینے کا موازنہ</h4>
-    <p style="font-size:12px; margin:3px 0;" id="monthCompareResult">اس بار بل پچھلے مہینے سے <b>1,200 RS کم</b> آیا ہے۔</p>
+  <!-- Comparison Section -->
+  <div class="card">
+    <h4>پچھلے اور نئے بل کا موازنہ</h4>
+    <div style="display:flex; gap:8px;">
+      <div class="sub-box" style="flex:1;">
+        <small>پچھلا بل:</small>
+        <input type="number" id="prevBillInput" value="5000" onchange="calcBillDiff()">
+      </div>
+      <div class="sub-box" style="flex:1;">
+        <small>نیا بل (تاریخ کے ساتھ):</small>
+        <input type="text" id="currBillInput" value="3800 RS (20 Aug)" readonly>
+      </div>
+    </div>
+
+    <!-- Large Result Comparison Box -->
+    <div class="balance-card" style="background:#1b5e20;">
+      <small>بل کا فرق (فرق کا نتیجہ)</small>
+      <div class="balance-large" id="billDiffResult">1,200 RS کم</div>
+    </div>
   </div>
 </div>
 
-<!-- Alerts Tab (9 Voice Alerts) -->
+<!-- Alerts Tab (9 Urdu Voice Alarms) -->
 <div id="alerts" class="tab-content">
   <div class="card">
     <h3>صوتی الرٹ ایڈیٹر (9 پیغامات)</h3>
@@ -244,14 +291,31 @@
 
   function toggleSidebar(s) { document.getElementById('sidebar').classList.toggle('active', s); }
   function promptVal(m) { let v = prompt(m); if(v) alert("محفوظ ہو گیا: " + v); }
-  function promptFixData() { 
-    let fix = prompt("فکس رقم درج کریں:", "30000");
-    if(fix) {
-      document.getElementById('dashFixAmt').innerText = fix + " RS";
+  
+  function openDataFixModal() {
+    let m = prompt("01. Data Fix:\nمیٹر منتخب کریں (m1, m2, m3, gas):", "m1");
+    if(m) {
+      let limit = prompt("روزانہ یونٹ لیمٹ درج کریں:");
+      let rate = prompt("فکس یونٹ ریٹ درج کریں:");
+      let fixAmt = prompt("ماہانہ فکس بجٹ درج کریں:", "30000");
+      if(fixAmt) document.getElementById('dashFixAmt').innerText = fixAmt + " RS";
       updateBalance();
+      alert("ڈیٹا سیٹ ہو گیا!");
     }
   }
-  function promptChangeNames() { prompt("میٹر کا نیا نام رکھیں:"); }
+
+  function promptChangeNames() { prompt("میٹر کا نیا نام درج کریں:"); }
+
+  function openSettingsModal() {
+    alert("سیٹنگز مینو:\n1. ساؤنڈ (ON/OFF)\n2. نوٹیفکیشن (ON/OFF)\n3. پاسورڈ تبدیل / ریسیٹ\n4. بیل ساؤنڈ چینج\n5. الارم ٹائمر");
+  }
+
+  function resetAppConfig() {
+    if(confirm("کیا آپ واقعی پوری ایپ کا ڈیٹا ری سیٹ کرنا چاہتے ہیں؟")) {
+      localStorage.clear();
+      location.reload();
+    }
+  }
 
   function showTab(id, el) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -274,30 +338,46 @@
     if(newR <= oldR) { alert("نئی ریڈنگ پرانی سے زیادہ ہونی چاہیے!"); return; }
 
     let diff = newR - oldR;
-    lastReadings[m] = newR; // Auto Lock for Next Entry
+    lastReadings[m] = newR;
     
     let dt = new Date();
-    let timeStr = dt.toLocaleDateString() + ' ' + dt.getHours() + ':' + dt.getMinutes();
+    let timeStr = dt.toLocaleDateString('ur-PK') + ' ' + dt.getHours() + ':' + dt.getMinutes();
 
     let tbodyId = m + 'Tbody';
     document.getElementById(tbodyId).innerHTML += `<tr><td>${timeStr}</td><td>${oldR}</td><td>${newR}</td><td>${diff}</td><td><button style="color:red;" onclick="this.parentElement.parentElement.remove()">🗑️</button></td></tr>`;
 
+    // Update Meter Live Status Cards
     if(m === 'gas') {
       document.getElementById('gasTotRes').innerText = diff;
+      document.getElementById('gasDaily').innerText = diff;
+      document.getElementById('gasTotal').innerText = diff;
       document.getElementById('gasDiffInput').value = diff;
     } else {
       document.getElementById(m + 'TotRes').innerText = diff;
+      document.getElementById(m + 'Daily').innerText = diff;
+      document.getElementById(m + 'Total').innerText = diff;
+      document.getElementById(m + 'Time').innerText = "0 دن 1 منٹ";
     }
     
     autoLoadDashOldReading();
     document.getElementById('dashNewR').value = '';
-    alert("ریڈنگ محفوظ ہو کر ہسٹری ٹیبل میں شامل ہو گئی!");
+    alert("ریڈنگ محفوظ ہو کر ریکارڈ میں شامل ہو گئی!");
   }
 
   function runGasFormula() {
+    let manual = parseFloat(document.getElementById('gasManualOverride').value);
+    if(!isNaN(manual)) {
+      document.getElementById('gasMmbtuOutput').innerText = manual.toFixed(4);
+      document.getElementById('dashGasFormulaRes').innerText = manual.toFixed(4) + " MMBTU";
+      alert("مینول MMBTU اپلائی ہو گیا!");
+      return;
+    }
+
     let diff = parseFloat(document.getElementById('gasDiffInput').value) || 0;
     let pf = parseFloat(document.getElementById('gasPF').value) || 1.0519;
-    let mmbtu = (diff * pf * 1031) / 28173.85;
+    let gcv = parseFloat(document.getElementById('gasGCV').value) || 1031;
+    let mmbtu = (diff * pf * gcv) / 28173.85;
+    
     document.getElementById('gasMmbtuOutput').innerText = mmbtu.toFixed(4);
     document.getElementById('dashGasFormulaRes').innerText = mmbtu.toFixed(4) + " MMBTU";
     alert("گیس فارمولا اپلائی ہو گیا!");
@@ -320,9 +400,23 @@
       let curTot = parseFloat(document.getElementById('dashTotalBillSum').innerText) || 0;
       let newTot = curTot + amt;
       document.getElementById('dashTotalBillSum').innerText = newTot + " RS";
+      document.getElementById('currBillInput').value = amt + " RS (" + dt + ")";
       updateBalance();
+      calcBillDiff();
     }
     alert("ادائیگی درج ہو گئی!");
+  }
+
+  function calcBillDiff() {
+    let prev = parseFloat(document.getElementById('prevBillInput').value) || 0;
+    let curr = parseFloat(document.getElementById('dashTotalBillSum').innerText) || 0;
+    let diff = prev - curr;
+    
+    if(diff >= 0) {
+      document.getElementById('billDiffResult').innerText = diff + " RS کم";
+    } else {
+      document.getElementById('billDiffResult').innerText = Math.abs(diff) + " RS زیادہ";
+    }
   }
 
   function updateBalance() {
@@ -348,7 +442,6 @@
     if(synth) synth.cancel();
   }
 
-  // Initial Setup
   autoLoadDashOldReading();
 </script>
 
