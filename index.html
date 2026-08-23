@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrical Bill Record</title>
-    <!-- Font Awesome Icons -->
+    <title>Electrical & Gas Bill Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS Link -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- Header -->
     <header>
-        <i class="fas fa-bell"></i>
-        <h1>Electrical Bill Record</h1>
+        <i class="fas fa-bell" id="headerBellIcon"></i>
+        <h1>Bill Management System</h1>
         <i class="fas fa-bars" onclick="toggleSidebar()"></i>
     </header>
 
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation Menu -->
     <div class="sidebar" id="sidebar">
         <h2>سائیڈ مینو <i class="fas fa-times" onclick="toggleSidebar()"></i></h2>
-        <div class="menu-item" onclick="openModal('budgetModal')"><i class="fas fa-database"></i> 01. Data Fix (فکس بجٹ)</div>
-        <div class="menu-item" onclick="openModal('meterNamesModal')"><i class="fas fa-pen"></i> 02. Change Meter Names</div>
-        <div class="menu-item" onclick="openModal('unitRatesModal')"><i class="fas fa-sliders-h"></i> 03. Unit Rates & Limits</div>
-        <div class="menu-item" onclick="downloadBackup()"><i class="fas fa-download"></i> 04. Download Backup File</div>
-        <div class="menu-item" onclick="window.print()"><i class="fas fa-file-export"></i> 05. Export PRO (PDF/Print)</div>
-        <div class="menu-item" onclick="switchTab('record')"><i class="fas fa-history"></i> 06. Bill History</div>
-        <div class="menu-item" onclick="resetData()"><i class="fas fa-sync" style="color:red;"></i> <span style="color:red;">07. Reset All Data</span></div>
+        <div class="menu-item" onclick="openModal('meterNamesModal')"><i class="fas fa-pen"></i> 01. Meter Name Change</div>
+        <div class="menu-item" onclick="exportData()"><i class="fas fa-file-export"></i> 02. Export Excel / PDF</div>
+        <div class="menu-item" onclick="openModal('syncModal')"><i class="fas fa-link"></i> 03. Sync App Link Data</div>
+        <div class="menu-item" onclick="openModal('privacyModal')"><i class="fas fa-key"></i> 04. Privacy & Password</div>
+        <div class="menu-item" onclick="openModal('pinModal')"><i class="fas fa-user-shield"></i> 05. Online Security PIN</div>
+        <div class="menu-item" onclick="backupCloud()"><i class="fas fa-cloud-upload-alt"></i> 06. Online Auto Backup</div>
+        <div class="menu-item" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i> 07. Share Daily Report on WhatsApp</div>
+        <div class="menu-item" onclick="switchTab('record')"><i class="fas fa-receipt"></i> 08. Bill Receipt Photo History</div>
+        <div class="menu-item" onclick="resetData()"><i class="fas fa-trash-alt" style="color:red;"></i> <span style="color:red;">09. Reset System Data</span></div>
     </div>
 
     <!-- Main Content Container -->
@@ -35,152 +35,227 @@
 
         <!-- TAB 1: DASHBOARD -->
         <div id="dashboard" class="tab-content active">
-            <!-- Paid Deposit Grid -->
+            <!-- Top 4 Meter Deposit Grid -->
             <div class="meter-grid">
-                <div class="meter-box">
-                    <h4 id="lbl_m1_dep">Meter 1</h4>
-                    Deposit Bill: <br><span class="val" id="dep_m1">0 RS</span>
+                <div class="meter-box"><h4 id="dash_lbl_m1">Meter 1</h4>Deposit: <span class="val" id="dash_dep_m1">0 RS</span></div>
+                <div class="meter-box"><h4 id="dash_lbl_m2">Meter 2</h4>Deposit: <span class="val" id="dash_dep_m2">0 RS</span></div>
+                <div class="meter-box"><h4 id="dash_lbl_m3">Meter 3</h4>Deposit: <span class="val" id="dash_dep_m3">0 RS</span></div>
+                <div class="meter-box"><h4 id="dash_lbl_m4">Gas Meter</h4>Deposit: <span class="val" id="dash_dep_m4">0 RS</span></div>
+            </div>
+
+            <!-- 2 Large Budget / Bill Boxes -->
+            <div class="large-box-container">
+                <div class="card large-box">
+                    <h4>Fixed Budget Amount</h4>
+                    <h2 id="disp_fixed_budget">0 RS</h2>
                 </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m2_dep">Meter 2</h4>
-                    Deposit Bill: <br><span class="val" id="dep_m2">0 RS</span>
-                </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m3_dep">Meter 3</h4>
-                    Deposit Bill: <br><span class="val" id="dep_m3">0 RS</span>
-                </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m4_dep">Meter 4</h4>
-                    Deposit Bill: <br><span class="val" id="dep_m4">0 RS</span>
+                <div class="card large-box">
+                    <h4>Net Payable Bill (صافی رقم)</h4>
+                    <h2 id="disp_net_bill">0 RS</h2>
                 </div>
             </div>
 
-            <!-- Reading Entry -->
+            <!-- Reading Entry Box -->
             <div class="card">
-                <h3>Dashboard Reading Entry <i class="fas fa-plus-circle"></i></h3>
+                <h3>Reading Entry Box <i class="fas fa-plus-circle"></i></h3>
                 <select id="entryMeterSelect">
                     <option value="m1">Meter 1</option>
                     <option value="m2">Meter 2</option>
                     <option value="m3">Meter 3</option>
-                    <option value="m4">Meter 4</option>
+                    <option value="gas">Gas Meter</option>
                 </select>
-                <input type="number" id="newReadingInput" placeholder="Enter new reading">
+                <input type="number" id="newReadingInput" placeholder="Enter Current Reading">
                 <input type="file" id="billImgInput" accept="image/*" style="display:none;">
-                <button type="button" class="btn-accent" onclick="document.getElementById('billImgInput').click()"><i class="fas fa-camera"></i> Upload picture</button>
-                <button type="button" onclick="saveReading()"><i class="fas fa-save"></i> Save reading</button>
+                <button type="button" class="btn-accent" onclick="document.getElementById('billImgInput').click()"><i class="fas fa-camera"></i> Upload Bill Receipt Picture</button>
+                <button type="button" onclick="saveReading()"><i class="fas fa-save"></i> Save Reading</button>
             </div>
 
-            <!-- Reading Status Summary -->
-            <div class="meter-grid">
-                <div class="meter-box">
-                    <h4 id="lbl_m1_stat">Meter 1</h4>
-                    Total: <span id="m1_total">0</span>
+            <!-- Bottom 4 Status Boxes (Daily, Total Units & Time) -->
+            <div class="meter-grid-4">
+                <div class="meter-box-detail">
+                    <h4 id="lbl_stat_m1">Meter 1</h4>
+                    <p>Daily Units: <b id="m1_daily_u">0</b></p>
+                    <p>Total Units: <b id="m1_total_u">0</b></p>
+                    <p>Duration: <span id="m1_time_str">0d 0h 0m</span></p>
                 </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m2_stat">Meter 2</h4>
-                    Total: <span id="m2_total">0</span>
+                <div class="meter-box-detail">
+                    <h4 id="lbl_stat_m2">Meter 2</h4>
+                    <p>Daily Units: <b id="m2_daily_u">0</b></p>
+                    <p>Total Units: <b id="m2_total_u">0</b></p>
+                    <p>Duration: <span id="m2_time_str">0d 0h 0m</span></p>
                 </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m3_stat">Meter 3</h4>
-                    Total: <span id="m3_total">0</span>
+                <div class="meter-box-detail">
+                    <h4 id="lbl_stat_m3">Meter 3</h4>
+                    <p>Daily Units: <b id="m3_daily_u">0</b></p>
+                    <p>Total Units: <b id="m3_total_u">0</b></p>
+                    <p>Duration: <span id="m3_time_str">0d 0h 0m</span></p>
                 </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m4_stat">Meter 4</h4>
-                    Total: <span id="m4_total">0</span>
+                <div class="meter-box-detail">
+                    <h4 id="lbl_stat_m4">Gas Meter</h4>
+                    <p>Daily Units: <b id="m4_daily_u">0</b></p>
+                    <p>Total Units: <b id="m4_total_u">0</b></p>
+                    <p>Duration: <span id="m4_time_str">0d 0h 0m</span></p>
                 </div>
-            </div>
-
-            <!-- Total Calculation -->
-            <div class="card" style="text-align: center; background: #fffde7;">
-                <h4>Total Estimated Bill:</h4>
-                <h2 style="color: #e65100;" id="totalEstBill">0 RS</h2>
             </div>
         </div>
 
-        <!-- TAB 2: RECORD / HISTORY -->
+        <!-- TAB 2: RECORD -->
         <div id="record" class="tab-content">
             <div class="card">
-                <h3>Readings History & Images</h3>
-                <div id="historyTableContainer"></div>
+                <h3>Manual History Entry</h3>
+                <label>Select Meter:</label>
+                <select id="rec_meter_select">
+                    <option value="m1">Meter 1</option>
+                    <option value="m2">Meter 2</option>
+                    <option value="m3">Meter 3</option>
+                    <option value="gas">Gas Meter</option>
+                </select>
+                <input type="number" id="rec_prev_reading" placeholder="Previous Reading Box">
+                <input type="number" id="rec_curr_reading" placeholder="Current Reading Box">
+                <input type="datetime-local" id="rec_time_select">
+                <button onclick="saveRecordManual()">Save Record Entry</button>
+            </div>
+
+            <!-- 4 Separate Meter Tables -->
+            <div class="card"><h3>Meter 1 History Table</h3><div id="table_m1"></div></div>
+            <div class="card"><h3>Meter 2 History Table</h3><div id="table_m2"></div></div>
+            <div class="card"><h3>Meter 3 History Table</h3><div id="table_m3"></div></div>
+            <div class="card"><h3>Gas Meter History Table</h3><div id="table_gas"></div></div>
+
+            <!-- Limit Configuration Box -->
+            <div class="card">
+                <h3>Meter Limit Setup</h3>
+                <select id="limitMeterSelect">
+                    <option value="m1">Meter 1</option>
+                    <option value="m2">Meter 2</option>
+                    <option value="m3">Meter 3</option>
+                    <option value="gas">Gas Meter</option>
+                </select>
+                <div class="meter-grid">
+                    <input type="number" id="lim_daily_unit" placeholder="Daily Unit Limit">
+                    <input type="number" id="lim_total_unit" placeholder="Total Unit Limit">
+                    <input type="number" id="lim_per_unit_rate" placeholder="Per Unit Rate Fix">
+                </div>
+                <button onclick="saveMeterLimits()">Save Limits</button>
+            </div>
+
+            <!-- Limit Display Boxes -->
+            <div class="meter-grid">
+                <div class="meter-box"><h4>Meter 1 Limits</h4><p id="disp_lim_m1">-</p></div>
+                <div class="meter-box"><h4>Meter 2 Limits</h4><p id="disp_lim_m2">-</p></div>
+                <div class="meter-box"><h4>Meter 3 Limits</h4><p id="disp_lim_m3">-</p></div>
+                <div class="meter-box"><h4>Gas Meter Limits</h4><p id="disp_lim_m4">-</p></div>
+            </div>
+
+            <!-- Budget & Overall Limit Boxes -->
+            <div class="meter-grid">
+                <div class="meter-box"><h4>Fix Budget Box</h4><input type="number" id="inp_fix_budget" placeholder="Enter Budget" onchange="updateOverallLimits()"><button onclick="updateOverallLimits()">Save</button></div>
+                <div class="meter-box"><h4>Total Meter Limit</h4><input type="number" id="inp_total_meter_limit" placeholder="Total Limit" onchange="updateOverallLimits()"><button onclick="updateOverallLimits()">Save</button></div>
             </div>
         </div>
 
         <!-- TAB 3: GAS FORMULA -->
         <div id="gas" class="tab-content">
             <div class="card">
-                <h3>SNGPL Auto Gas Formula</h3>
-                <label>HM3 Difference:</label>
-                <input type="number" id="hm3Diff" value="0.00" oninput="calcGas()">
-                <label>Pressure Factor:</label>
-                <input type="number" id="pressFactor" value="1.0519" oninput="calcGas()">
-                <label>GCV Rate:</label>
-                <input type="number" id="gcvRate" value="1031" oninput="calcGas()">
-                <div style="background:#b71c1c; color:white; padding:15px; border-radius:8px; text-align:center; margin-top:10px;">
-                    Gas Calculation Result:
-                    <h2 id="gasResult">0.0000</h2>
+                <h3>SNGPL Gas Bill Calculation</h3>
+                
+                <div class="meter-grid">
+                    <div><label>Current Reading:</label><input type="number" id="gas_curr" oninput="calcGasBill()"></div>
+                    <div><label>Previous Reading:</label><input type="number" id="gas_prev" oninput="calcGasBill()"></div>
+                </div>
+                <label>Difference (HM3):</label>
+                <input type="number" id="gas_diff" readonly>
+
+                <div class="meter-grid">
+                    <div><label>Pres. Factor:</label><input type="number" id="gas_press" value="1.0218" oninput="calcGasBill()"></div>
+                    <div><label>Gas Consumed HM3:</label><input type="number" id="gas_consumed_hm3" readonly></div>
+                </div>
+
+                <div class="meter-grid">
+                    <div><label>MMBTU Factor:</label><input type="number" id="gas_mmbtu_factor" value="0.224" oninput="calcGasBill()"></div>
+                    <div><label>GCV Rate:</label><input type="number" id="gas_gcv" value="1031" oninput="calcGasBill()"></div>
+                </div>
+
+                <hr style="margin:10px 0;">
+
+                <h4>Bill Components Breakdown</h4>
+                <div class="meter-grid">
+                    <input type="number" id="gas_charges" placeholder="Gas Charges (Rs)" oninput="calcGasBill()">
+                    <input type="number" id="gas_meter_rent" placeholder="Meter Rent (580)" value="580" oninput="calcGasBill()">
+                    <input type="number" id="gas_gst" placeholder="GST Charges" oninput="calcGasBill()">
+                    <input type="number" id="gas_arrears" placeholder="Arrears / Aging" oninput="calcGasBill()">
+                </div>
+
+                <!-- Big Result Box -->
+                <div class="large-box" style="background:#004d40; color:white; padding:20px; text-align:center; margin-top:15px; border-radius:10px;">
+                    <h3>Total Payable Gas Bill</h3>
+                    <h1 id="gas_total_result_box">Rs. 0.00</h1>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: ANALYSIS & BILL DEPOSIT -->
-        <div id="analysis" class="tab-content">
-            <div class="card">
-                <h3>Bill Deposit Entry Form</h3>
-                <select id="depMeterSelect">
-                    <option value="m1">Meter 1</option>
-                    <option value="m2">Meter 2</option>
-                    <option value="m3">Meter 3</option>
-                    <option value="m4">Meter 4</option>
-                </select>
-                <input type="number" id="depAmount" placeholder="Write the amount">
-                <button onclick="saveDeposit()">Save Deposit</button>
-            </div>
-        </div>
-
-        <!-- TAB 5: ALERTS -->
+        <!-- TAB 4: ALERTS -->
         <div id="alerts" class="tab-content">
             <div class="card">
-                <h3>Alerts & System Limits</h3>
-                <p>Status: <b style="color:green;">Active</b></p>
+                <h3>System Alert Configuration</h3>
+                <input type="text" id="alert_text_input" placeholder="Write Complaint or Alert Text">
+                <button onclick="addAlert()">Add Alert Message</button>
+            </div>
+
+            <!-- Complaint & Alert Log -->
+            <div class="card">
+                <h3>Active Alert List</h3>
+                <div id="alert_list_container"></div>
+            </div>
+
+            <!-- App Simulator for Date & Time Test -->
+            <div class="card" style="background:#e3f2fd;">
+                <h3>Global Time Test Simulator</h3>
+                <p>Set dummy date/time to test limit cross, due date & alert triggers across entire app:</p>
+                <input type="datetime-local" id="simulated_time_input">
+                <button class="btn-accent" onclick="testSystemAlerts()">Run System Test</button>
             </div>
         </div>
 
     </div>
 
     <!-- Modals -->
-    <div class="modal" id="budgetModal">
-        <div class="modal-content">
-            <h3>Fix Budget Setting</h3>
-            <input type="number" id="budgetInput" placeholder="Enter Fixed Budget Amount">
-            <button onclick="saveBudget()">Save Budget</button>
-            <button style="background:#777;" onclick="closeModal('budgetModal')">Cancel</button>
-        </div>
-    </div>
-
     <div class="modal" id="meterNamesModal">
         <div class="modal-content">
-            <h3>Change Meter Names (Display Only)</h3>
+            <h3>Change Meter Names</h3>
             <input type="text" id="name_m1" placeholder="Meter 1 Name">
             <input type="text" id="name_m2" placeholder="Meter 2 Name">
             <input type="text" id="name_m3" placeholder="Meter 3 Name">
-            <input type="text" id="name_m4" placeholder="Meter 4 Name">
+            <input type="text" id="name_m4" placeholder="Gas Meter Name">
             <button onclick="saveMeterNames()">Save Names</button>
-            <button style="background:#777;" onclick="closeModal('meterNamesModal')">Cancel</button>
+            <button style="background:#777;" onclick="closeModal('meterNamesModal')">Close</button>
         </div>
     </div>
 
-    <div class="modal" id="unitRatesModal">
+    <div class="modal" id="privacyModal">
         <div class="modal-content">
-            <h3>Unit Rates Settings</h3>
-            <select id="limitMeterSelect">
-                <option value="m1">Meter 1</option>
-                <option value="m2">Meter 2</option>
-                <option value="m3">Meter 3</option>
-                <option value="m4">Meter 4</option>
-            </select>
-            <input type="number" id="unitRate" placeholder="Per Unit Rate">
-            <button onclick="saveLimits()">Save Settings</button>
-            <button style="background:#777;" onclick="closeModal('unitRatesModal')">Cancel</button>
+            <h3>Privacy & Password Setup</h3>
+            <input type="password" id="app_pass" placeholder="Enter New Password">
+            <button onclick="savePassword()">Save Password</button>
+            <button style="background:#777;" onclick="closeModal('privacyModal')">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="pinModal">
+        <div class="modal-content">
+            <h3>Security Key PIN</h3>
+            <input type="text" id="app_pin" placeholder="Enter Security PIN Code">
+            <button onclick="savePIN()">Save PIN</button>
+            <button style="background:#777;" onclick="closeModal('pinModal')">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="syncModal">
+        <div class="modal-content">
+            <h3>Sync Data via Link</h3>
+            <input type="text" id="sync_link" placeholder="Paste App Sync URL Link">
+            <button onclick="alert('Syncing data...')">Connect & Sync</button>
+            <button style="background:#777;" onclick="closeModal('syncModal')">Close</button>
         </div>
     </div>
 
@@ -189,11 +264,9 @@
         <div class="nav-item active" onclick="switchTab('dashboard')"><i class="fas fa-tachometer-alt"></i>Dashboard</div>
         <div class="nav-item" onclick="switchTab('record')"><i class="fas fa-list-alt"></i>Record</div>
         <div class="nav-item" onclick="switchTab('gas')"><i class="fas fa-fire"></i>Gas</div>
-        <div class="nav-item" onclick="switchTab('analysis')"><i class="fas fa-chart-line"></i>Analysis</div>
         <div class="nav-item" onclick="switchTab('alerts')"><i class="fas fa-bell"></i>Alerts</div>
     </div>
 
-    <!-- Custom JS Link -->
     <script src="script.js"></script>
 </body>
 </html>
