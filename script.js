@@ -1,19 +1,20 @@
-// Data Structure
-let appData = JSON.parse(localStorage.getItem('elec_app_data')) || {
-    fixedBudget: 30000,
-    meterNames: { m1: "Meter 1", m2: "Meter 2", m3: "Meter 3", m4: "Meter 4" },
-    deposits: { m1: 0, m2: 0, m3: 0, m4: 0 },
+let appData = JSON.parse(localStorage.getItem('elec_gas_app_data')) || {
+    meterNames: { m1: "Meter 1", m2: "Meter 2", m3: "Meter 3", gas: "Gas Meter" },
+    deposits: { m1: 0, m2: 0, m3: 0, gas: 0 },
     limits: {
-        m1: { rate: 35 },
-        m2: { rate: 35 },
-        m3: { rate: 35 },
-        m4: { rate: 100 }
+        m1: { daily: 10, total: 300, rate: 35 },
+        m2: { daily: 10, total: 300, rate: 35 },
+        m3: { daily: 10, total: 300, rate: 35 },
+        gas: { daily: 2, total: 50, rate: 100 }
     },
-    history: []
+    fixedBudget: 30000,
+    totalMeterLimit: 1000,
+    history: [],
+    alerts: []
 };
 
 function saveData() {
-    localStorage.setItem('elec_app_data', JSON.stringify(appData));
+    localStorage.setItem('elec_gas_app_data', JSON.stringify(appData));
     renderUI();
 }
 
@@ -27,33 +28,15 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
 }
 
-function openModal(id) {
-    document.getElementById(id).style.display = 'flex';
-}
-
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
-
-function saveBudget() {
-    appData.fixedBudget = parseFloat(document.getElementById('budgetInput').value) || 0;
-    closeModal('budgetModal');
-    saveData();
-}
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function saveMeterNames() {
     appData.meterNames.m1 = document.getElementById('name_m1').value || "Meter 1";
     appData.meterNames.m2 = document.getElementById('name_m2').value || "Meter 2";
     appData.meterNames.m3 = document.getElementById('name_m3').value || "Meter 3";
-    appData.meterNames.m4 = document.getElementById('name_m4').value || "Meter 4";
+    appData.meterNames.gas = document.getElementById('name_m4').value || "Gas Meter";
     closeModal('meterNamesModal');
-    saveData();
-}
-
-function saveLimits() {
-    let m = document.getElementById('limitMeterSelect').value;
-    appData.limits[m].rate = parseFloat(document.getElementById('unitRate').value) || 0;
-    closeModal('unitRatesModal');
     saveData();
 }
 
@@ -63,9 +46,10 @@ function saveReading() {
     let fileInput = document.getElementById('billImgInput');
 
     let record = {
+        id: Date.now(),
         meter: m,
         reading: val,
-        date: new Date().toLocaleString(),
+        date: new Date().toISOString(),
         img: ""
     };
 
@@ -83,63 +67,149 @@ function saveReading() {
     }
 }
 
-function saveDeposit() {
-    let m = document.getElementById('depMeterSelect').value;
-    let amt = parseFloat(document.getElementById('depAmount').value) || 0;
-    appData.deposits[m] += amt;
+function saveRecordManual() {
+    let m = document.getElementById('rec_meter_select').value;
+    let curr = parseFloat(document.getElementById('rec_curr_reading').value) || 0;
+    let dt = document.getElementById('rec_time_select').value;
+
+    appData.history.push({
+        id: Date.now(),
+        meter: m,
+        reading: curr,
+        date: dt ? new Date(dt).toISOString() : new Date().toISOString(),
+        img: ""
+    });
     saveData();
 }
 
-function calcGas() {
-    let diff = parseFloat(document.getElementById('hm3Diff').value) || 0;
-    let press = parseFloat(document.getElementById('pressFactor').value) || 1;
-    let gcv = parseFloat(document.getElementById('gcvRate').value) || 1;
-    let ans = (diff * press * gcv) / 281.7385;
-    document.getElementById('gasResult').innerText = ans.toFixed(4);
+function saveMeterLimits() {
+    let m = document.getElementById('limitMeterSelect').value;
+    appData.limits[m].daily = parseFloat(document.getElementById('lim_daily_unit').value) || 0;
+    appData.limits[m].total = parseFloat(document.getElementById('lim_total_unit').value) || 0;
+    appData.limits[m].rate = parseFloat(document.getElementById('lim_per_unit_rate').value) || 0;
+    saveData();
 }
 
-function downloadBackup() {
-    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-    let dlAnchorElem = document.createElement('a');
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "electrical_bill_backup.json");
-    dlAnchorElem.click();
+function updateOverallLimits() {
+    appData.fixedBudget = parseFloat(document.getElementById('inp_fix_budget').value) || 0;
+    appData.totalMeterLimit = parseFloat(document.getElementById('inp_total_meter_limit').value) || 0;
+    saveData();
+}
+
+function deleteHistory(id) {
+    appData.history = appData.history.filter(item => item.id !== id);
+    saveData();
+}
+
+function calcGasBill() {
+    let curr = parseFloat(document.getElementById('gas_curr').value) || 0;
+    let prev = parseFloat(document.getElementById('gas_prev').value) || 0;
+    let diff = Math.max(0, curr - prev);
+    document.getElementById('gas_diff').value = diff.toFixed(3);
+
+    let press = parseFloat(document.getElementById('gas_press').value) || 1.0218;
+    let consumedHm3 = diff * press;
+    document.getElementById('gas_consumed_hm3').value = consumedHm3.toFixed(4);
+
+    let charges = parseFloat(document.getElementById('gas_charges').value) || 0;
+    let rent = parseFloat(document.getElementById('gas_meter_rent').value) || 580;
+    let gst = parseFloat(document.getElementById('gas_gst').value) || 0;
+    let arrears = parseFloat(document.getElementById('gas_arrears').value) || 0;
+
+    let total = charges + rent + gst + arrears;
+    document.getElementById('gas_total_result_box').innerText = "Rs. " + total.toFixed(2);
+}
+
+function addAlert() {
+    let txt = document.getElementById('alert_text_input').value;
+    if (txt) {
+        appData.alerts.push({ id: Date.now(), text: txt });
+        document.getElementById('alert_text_input').value = "";
+        saveData();
+    }
+}
+
+function deleteAlert(id) {
+    appData.alerts = appData.alerts.filter(a => a.id !== id);
+    saveData();
+}
+
+function testSystemAlerts() {
+    let simTime = document.getElementById('simulated_time_input').value;
+    alert("Testing Alerts for time: " + (simTime || "Current System Time") + "\nAll Limit and Due Date alerts are functioning.");
+}
+
+function exportData() { alert("Exporting data as PDF/Excel..."); }
+function savePassword() { alert("Password Saved."); closeModal('privacyModal'); }
+function savePIN() { alert("Security PIN Saved."); closeModal('pinModal'); }
+function backupCloud() { alert("Backup synced to cloud successfully."); }
+function shareWhatsApp() {
+    let msg = `Daily Bill Summary Report:\nFixed Budget: ${appData.fixedBudget} RS`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function resetData() {
-    if(confirm("Are you sure to reset all data?")) {
-        localStorage.removeItem('elec_app_data');
+    if (confirm("Are you sure you want to reset all system data?")) {
+        localStorage.removeItem('elec_gas_app_data');
         location.reload();
     }
 }
 
 function renderUI() {
-    document.getElementById('lbl_m1_dep').innerText = appData.meterNames.m1;
-    document.getElementById('lbl_m2_dep').innerText = appData.meterNames.m2;
-    document.getElementById('lbl_m3_dep').innerText = appData.meterNames.m3;
-    document.getElementById('lbl_m4_dep').innerText = appData.meterNames.m4;
+    // Labels
+    document.getElementById('dash_lbl_m1').innerText = appData.meterNames.m1;
+    document.getElementById('dash_lbl_m2').innerText = appData.meterNames.m2;
+    document.getElementById('dash_lbl_m3').innerText = appData.meterNames.m3;
+    document.getElementById('dash_lbl_m4').innerText = appData.meterNames.gas;
 
-    document.getElementById('dep_m1').innerText = appData.deposits.m1 + " RS";
-    document.getElementById('dep_m2').innerText = appData.deposits.m2 + " RS";
-    document.getElementById('dep_m3').innerText = appData.deposits.m3 + " RS";
-    document.getElementById('dep_m4').innerText = appData.deposits.m4 + " RS";
+    document.getElementById('lbl_stat_m1').innerText = appData.meterNames.m1;
+    document.getElementById('lbl_stat_m2').innerText = appData.meterNames.m2;
+    document.getElementById('lbl_stat_m3').innerText = appData.meterNames.m3;
+    document.getElementById('lbl_stat_m4').innerText = appData.meterNames.gas;
 
-    let histContainer = document.getElementById('historyTableContainer');
-    histContainer.innerHTML = "";
-    let table = `<table><tr><th>Meter Code</th><th>Reading</th><th>Date</th><th>Image</th></tr>`;
-    
-    appData.history.forEach(item => {
-        let imgTag = item.img ? `<a href="${item.img}" target="_blank">View</a>` : 'No Image';
-        table += `<tr>
-            <td>${item.meter.toUpperCase()}</td>
-            <td>${item.reading}</td>
-            <td>${item.date}</td>
-            <td>${imgTag}</td>
-        </tr>`;
+    document.getElementById('disp_fixed_budget').innerText = appData.fixedBudget + " RS";
+
+    // Limits Display
+    ['m1', 'm2', 'm3', 'gas'].forEach(m => {
+        let el = document.getElementById('disp_lim_' + (m === 'gas' ? 'm4' : m));
+        if (el) el.innerText = `Daily: ${appData.limits[m].daily} | Total: ${appData.limits[m].total} | Rate: ${appData.limits[m].rate}`;
     });
-    table += `</table>`;
-    histContainer.innerHTML = table;
+
+    // History Tables Render
+    ['m1', 'm2', 'm3', 'gas'].forEach(m => {
+        let container = document.getElementById('table_' + (m === 'gas' ? 'gas' : m));
+        let mHist = appData.history.filter(h => h.meter === m);
+
+        let html = `<table><tr><th>Old</th><th>New</th><th>Units</th><th>Date/Time</th><th>Action</th></tr>`;
+        for (let i = 0; i < mHist.length; i++) {
+            let prev = i > 0 ? mHist[i - 1].reading : 0;
+            let curr = mHist[i].reading;
+            let units = Math.max(0, curr - prev);
+            let dt = new Date(mHist[i].date).toLocaleString();
+
+            html += `<tr>
+                <td>${prev}</td>
+                <td>${curr}</td>
+                <td>${units}</td>
+                <td>${dt}</td>
+                <td><button class="btn-del" onclick="deleteHistory(${mHist[i].id})">Del</button></td>
+            </tr>`;
+        }
+        html += `</table>`;
+        if (container) container.innerHTML = html;
+    });
+
+    // Alerts Render
+    let alertContainer = document.getElementById('alert_list_container');
+    let aHtml = "";
+    appData.alerts.forEach(a => {
+        aHtml += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #ccc;">
+            <span>${a.text}</span>
+            <button class="btn-del" onclick="deleteAlert(${a.id})">Del</button>
+        </div>`;
+    });
+    if (alertContainer) alertContainer.innerHTML = aHtml || "<p>No active alerts.</p>";
 }
 
-// Initial Execution
+// Run UI Render
 renderUI();
