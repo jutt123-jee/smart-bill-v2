@@ -3,197 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrical & Gas Management</title>
+    <title>Electrical Bill Record</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-color: #004d40;
+            --accent-color: #0288d1;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 70px;
+        }
+
+        /* Top Header */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+        }
+
+        /* Sidebar Navigation Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 280px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar h2 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            width: 20px;
+            color: var(--primary-color);
+        }
+
+        /* Main Content Container */
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .meter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .meter-box {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+        }
+
+        .meter-box h4 {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .meter-box .val {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        /* Inputs & Form Elements */
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        /* Bottom Fixed Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* Custom Modal Replacement for Alerts */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <i class="fas fa-bell" id="bellIcon"></i>
-        <h1>Bill Management System</h1>
+        <i class="fas fa-bell"></i>
+        <h1>Electrical Bill Record</h1>
         <i class="fas fa-bars" onclick="toggleSidebar()"></i>
     </header>
 
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
         <h2>سائیڈ مینو <i class="fas fa-times" onclick="toggleSidebar()"></i></h2>
-        <div class="menu-item" onclick="openModal('meterNamesModal')"><i class="fas fa-pen"></i> Change Meter Name</div>
-        <div class="menu-item" onclick="openModal('cloudSyncModal')"><i class="fas fa-cloud-upload-alt"></i> Cloud Sync & Backup</div>
-        <div class="menu-item" onclick="alert('Exporting PDF/Excel...')"><i class="fas fa-file-export"></i> Export Report (PDF/Excel)</div>
-        <div class="menu-item" onclick="openModal('securityModal')"><i class="fas fa-user-shield"></i> App Security (PIN)</div>
-        <div class="menu-item" onclick="openModal('privacyModal')"><i class="fas fa-user-lock"></i> Account & Privacy Policy</div>
-        <div class="menu-item" onclick="confirmResetAllData()"><i class="fas fa-trash-alt" style="color:red;"></i> <span style="color:red;">Reset All Data</span></div>
+        <div class="menu-item" onclick="openModal('budgetModal')"><i class="fas fa-database"></i> 01. Data Fix (فکس بجٹ)</div>
+        <div class="menu-item" onclick="openModal('meterNamesModal')"><i class="fas fa-pen"></i> 02. Change Meter Names</div>
+        <div class="menu-item" onclick="openModal('unitRatesModal')"><i class="fas fa-sliders-h"></i> 03. Unit Rates & Limits</div>
+        <div class="menu-item" onclick="downloadBackup()"><i class="fas fa-download"></i> 04. Download Backup File</div>
+        <div class="menu-item" onclick="window.print()"><i class="fas fa-file-export"></i> 05. Export PRO (PDF/Print)</div>
+        <div class="menu-item" onclick="switchTab('record')"><i class="fas fa-history"></i> 06. Bill History</div>
+        <div class="menu-item" onclick="resetData()"><i class="fas fa-sync" style="color:red;"></i> <span style="color:red;">07. Reset All Data</span></div>
     </div>
 
+    <!-- Main Content Container -->
     <div class="container">
 
         <!-- TAB 1: DASHBOARD -->
         <div id="dashboard" class="tab-content active">
+            <!-- Paid Deposit Grid -->
             <div class="meter-grid">
-                <div class="meter-box"><h4 id="dash_m1">Meter 1</h4>Deposit: <br><b id="dep_m1">0 RS</b></div>
-                <div class="meter-box"><h4 id="dash_m2">Meter 2</h4>Deposit: <br><b id="dep_m2">0 RS</b></div>
-                <div class="meter-box"><h4 id="dash_m3">Meter 3</h4>Deposit: <br><b id="dep_m3">0 RS</b></div>
-                <div class="meter-box"><h4 id="dash_m4">Gas Meter</h4>Deposit: <br><b id="dep_m4">0 RS</b></div>
+                <div class="meter-box">
+                    <h4 id="lbl_m1_dep">Meter 1</h4>
+                    Deposit Bill: <br><span class="val" id="dep_m1">0 RS</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m2_dep">Meter 2</h4>
+                    Deposit Bill: <br><span class="val" id="dep_m2">0 RS</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m3_dep">Meter 3</h4>
+                    Deposit Bill: <br><span class="val" id="dep_m3">0 RS</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m4_dep">Meter 4</h4>
+                    Deposit Bill: <br><span class="val" id="dep_m4">0 RS</span>
+                </div>
             </div>
 
-            <div class="large-box-container">
-                <div class="card large-box">
-                    <h4>Fixed Budget Amount</h4>
-                    <h2 id="disp_budget">0 RS</h2>
-                </div>
-                <div class="card large-box">
-                    <h4>Net Payable Bill (صافی رقم)</h4>
-                    <h2 id="disp_net">0 RS</h2>
-                </div>
-            </div>
-
+            <!-- Reading Entry (Simple Dropdown without custom names) -->
             <div class="card">
-                <h3>Reading Entry Box <i class="fas fa-plus-circle"></i></h3>
+                <h3>Dashboard Reading Entry <i class="fas fa-plus-circle"></i></h3>
                 <select id="entryMeterSelect">
                     <option value="m1">Meter 1</option>
                     <option value="m2">Meter 2</option>
                     <option value="m3">Meter 3</option>
-                    <option value="gas">Gas Meter</option>
+                    <option value="m4">Meter 4</option>
                 </select>
-                <input type="number" id="newReadingInput" placeholder="Enter Current Reading">
+                <input type="number" id="newReadingInput" placeholder="Enter new reading">
                 <input type="file" id="billImgInput" accept="image/*" style="display:none;">
-                <button type="button" class="btn-accent" onclick="document.getElementById('billImgInput').click()"><i class="fas fa-camera"></i> Upload Picture</button>
-                <button type="button" onclick="saveReading()"><i class="fas fa-save"></i> Save Reading</button>
+                <button type="button" class="btn-accent" onclick="document.getElementById('billImgInput').click()"><i class="fas fa-camera"></i> Upload picture</button>
+                <button type="button" onclick="saveReading()"><i class="fas fa-save"></i> Save reading</button>
             </div>
 
-            <div class="meter-grid-4">
-                <div class="meter-box-detail"><h4 id="stat_m1">Meter 1</h4>Daily: <b id="d_u1">0</b> | Total: <b id="t_u1">0</b><p>Duration: <span id="dur_m1">0d 0h 0m</span></p></div>
-                <div class="meter-box-detail"><h4 id="stat_m2">Meter 2</h4>Daily: <b id="d_u2">0</b> | Total: <b id="t_u2">0</b><p>Duration: <span id="dur_m2">0d 0h 0m</span></p></div>
-                <div class="meter-box-detail"><h4 id="stat_m3">Meter 3</h4>Daily: <b id="d_u3">0</b> | Total: <b id="t_u3">0</b><p>Duration: <span id="dur_m3">0d 0h 0m</span></p></div>
-                <div class="meter-box-detail"><h4 id="stat_m4">Gas Meter</h4>Daily: <b id="d_u4">0</b> | Total: <b id="t_u4">0</b><p>Duration: <span id="dur_m4">0d 0h 0m</span></p></div>
-            </div>
-        </div>
-
-        <!-- TAB 2: ANALYSIS (BILL DEPOSIT & DUE DATE) -->
-        <div id="analysis" class="tab-content">
-            <!-- Deposit Payment Box -->
-            <div class="card">
-                <h3>Bill Deposit Entry</h3>
-                <select id="an_meter_select">
-                    <option value="m1">Meter 1</option>
-                    <option value="m2">Meter 2</option>
-                    <option value="m3">Meter 3</option>
-                    <option value="gas">Gas Meter</option>
-                </select>
-                <input type="number" id="an_bill_amount" placeholder="جمع شدہ بل کی رقم درج کریں">
-                <label>تاریخ منتخب کریں:</label>
-                <input type="date" id="an_pay_date">
-                <select id="an_pay_source">
-                    <option value="Ghar">گھر سے ادا ہوا (Ghar)</option>
-                    <option value="Bahir">باہر سے ادا ہوا (Bahir)</option>
-                </select>
-                <button onclick="saveAnalysisDeposit()"><i class="fas fa-save"></i> Save Payment Entry</button>
-            </div>
-
-            <!-- Payment Table -->
-            <div class="card">
-                <h3>Payment History Table</h3>
-                <div id="analysis_table_container"></div>
-            </div>
-
-            <!-- Payment Totals -->
+            <!-- Reading Status Summary -->
             <div class="meter-grid">
-                <div class="meter-box"><h4>گھر والے بل کا ٹوٹل</h4><h3 id="tot_ghar_bill">0 RS</h3></div>
-                <div class="meter-box"><h4>باہر والے بل کا ٹوٹل</h4><h3 id="tot_bahir_bill">0 RS</h3></div>
+                <div class="meter-box">
+                    <h4 id="lbl_m1_stat">Meter 1</h4>
+                    Total: <span id="m1_total">0</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m2_stat">Meter 2</h4>
+                    Total: <span id="m2_total">0</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m3_stat">Meter 3</h4>
+                    Total: <span id="m3_total">0</span>
+                </div>
+                <div class="meter-box">
+                    <h4 id="lbl_m4_stat">Meter 4</h4>
+                    Total: <span id="m4_total">0</span>
+                </div>
             </div>
-            <button onclick="calcCombinedTotal()" style="margin-bottom:15px;"><i class="fas fa-calculator"></i> کل ٹوٹل نکالیں (Grand Total)</button>
 
-            <!-- Due Date Setup Box -->
-            <div class="card">
-                <h3>Due Date Entry</h3>
-                <select id="due_meter_select">
-                    <option value="m1">Meter 1</option>
-                    <option value="m2">Meter 2</option>
-                    <option value="m3">Meter 3</option>
-                    <option value="gas">Gas Meter</option>
-                </select>
-                <label>Due Date درج کریں:</label>
-                <input type="date" id="due_date_input">
-                <button onclick="saveDueDate()"><i class="fas fa-calendar-alt"></i> Save Due Date</button>
-            </div>
-
-            <div class="card">
-                <h3>Meter Due Dates Status</h3>
-                <div id="due_dates_display_box"></div>
+            <!-- Total Calculation -->
+            <div class="card" style="text-align: center; background: #fffde7;">
+                <h4>Total Estimated Bill:</h4>
+                <h2 style="color: #e65100;" id="totalEstBill">0 RS</h2>
             </div>
         </div>
 
-        <!-- TAB 3: RECORD -->
+        <!-- TAB 2: RECORD / HISTORY -->
         <div id="record" class="tab-content">
             <div class="card">
-                <h3>Manual History Entry</h3>
-                <select id="rec_meter_select">
+                <h3>Readings History & Images</h3>
+                <div id="historyTableContainer">
+                    <!-- History Tables Auto Generated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: GAS FORMULA -->
+        <div id="gas" class="tab-content">
+            <div class="card">
+                <h3>SNGPL Auto Gas Formula</h3>
+                <label>HM3 Difference:</label>
+                <input type="number" id="hm3Diff" value="0.00" oninput="calcGas()">
+                <label>Pressure Factor:</label>
+                <input type="number" id="pressFactor" value="1.0519" oninput="calcGas()">
+                <label>GCV Rate:</label>
+                <input type="number" id="gcvRate" value="1031" oninput="calcGas()">
+                <div style="background:#b71c1c; color:white; padding:15px; border-radius:8px; text-align:center; margin-top:10px;">
+                    Gas Calculation Result:
+                    <h2 id="gasResult">0.0000</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: ANALYSIS & BILL DEPOSIT -->
+        <div id="analysis" class="tab-content">
+            <div class="card">
+                <h3>Bill Deposit Entry Form</h3>
+                <select id="depMeterSelect">
                     <option value="m1">Meter 1</option>
                     <option value="m2">Meter 2</option>
                     <option value="m3">Meter 3</option>
-                    <option value="gas">Gas Meter</option>
+                    <option value="m4">Meter 4</option>
                 </select>
-                <input type="number" id="rec_prev" placeholder="Previous Reading">
-                <input type="number" id="rec_curr" placeholder="Current Reading">
-                <input type="datetime-local" id="rec_dt">
-                <button onclick="saveManualRecord()">Save Record</button>
+                <input type="number" id="depAmount" placeholder="Write the amount">
+                <button onclick="saveDeposit()">Save Deposit</button>
             </div>
-
-            <div class="card"><h3>Meter 1 History</h3><div id="table_m1"></div></div>
-            <div class="card"><h3>Meter 2 History</h3><div id="table_m2"></div></div>
-            <div class="card"><h3>Meter 3 History</h3><div id="table_m3"></div></div>
-            <div class="card"><h3>Gas Meter History</h3><div id="table_gas"></div></div>
         </div>
 
-        <!-- TAB 4: ALERTS -->
+        <!-- TAB 5: ALERTS -->
         <div id="alerts" class="tab-content">
             <div class="card">
-                <h3>Complain & Alert Entry</h3>
-                <input type="text" id="alert_text" placeholder="Write Complaint or Alert Text">
-                <label>الرٹ کا فرضی وقت سیٹ کریں:</label>
-                <input type="datetime-local" id="alert_time_input">
-                <button onclick="saveAlert()"><i class="fas fa-plus"></i> Save Alert</button>
-            </div>
-
-            <div class="card">
-                <h3>Active Alerts & Complaints</h3>
-                <div id="alerts_list_box"></div>
+                <h3>Alerts & System Limits</h3>
+                <p>Status: <b style="color:green;">Active</b></p>
             </div>
         </div>
 
     </div>
 
     <!-- Modals -->
-    <div class="modal" id="meterNamesModal">
+    <div class="modal" id="budgetModal">
         <div class="modal-content">
-            <h3>Change Meter Names</h3>
-            <input type="text" id="name_m1" placeholder="Meter 1 Name">
-            <input type="text" id="name_m2" placeholder="Meter 2 Name">
-            <input type="text" id="name_m3" placeholder="Meter 3 Name">
-            <input type="text" id="name_m4" placeholder="Gas Meter Name">
-            <button onclick="saveMeterNames()">Save All Names</button>
-            <button style="background:#777;" onclick="closeModal('meterNamesModal')">Close</button>
+            <h3>Fix Budget Setting</h3>
+            <input type="number" id="budgetInput" placeholder="Enter Fixed Budget Amount">
+            <button onclick="saveBudget()">Save Budget</button>
+            <button style="background:#777;" onclick="closeModal('budgetModal')">Cancel</button>
         </div>
     </div>
 
-    <div class="modal" id="cloudSyncModal">
+    <div class="modal" id="meterNamesModal">
         <div class="modal-content">
-            <h3>Cloud Sync (5 Mobiles)</h3>
-            <input type="text" id="syncKeyInput" placeholder="Enter Secret 6-Digit Key">
-            <button onclick="saveSyncKey()">Connect Sync</button>
-            <button style="background:#777;" onclick="closeModal('cloudSyncModal')">Close</button>
+            <h3>Change Meter Names (Display Only)</h3>
+            <input type="text" id="name_m1" placeholder="Meter 1 Name">
+            <input type="text" id="name_m2" placeholder="Meter 2 Name">
+            <input type="text" id="name_m3" placeholder="Meter 3 Name">
+            <input type="text" id="name_m4" placeholder="Meter 4 Name">
+            <button onclick="saveMeterNames()">Save Names</button>
+            <button style="background:#777;" onclick="closeModal('meterNamesModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="unitRatesModal">
+        <div class="modal-content">
+            <h3>Unit Rates Settings</h3>
+            <select id="limitMeterSelect">
+                <option value="m1">Meter 1</option>
+                <option value="m2">Meter 2</option>
+                <option value="m3">Meter 3</option>
+                <option value="m4">Meter 4</option>
+            </select>
+            <input type="number" id="unitRate" placeholder="Per Unit Rate">
+            <button onclick="saveLimits()">Save Settings</button>
+            <button style="background:#777;" onclick="closeModal('unitRatesModal')">Cancel</button>
         </div>
     </div>
 
     <!-- Bottom Navigation Bar -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('dashboard')"><i class="fas fa-tachometer-alt"></i>Dashboard</div>
-        <div class="nav-item" onclick="switchTab('analysis')"><i class="fas fa-chart-line"></i>Analysis</div>
         <div class="nav-item" onclick="switchTab('record')"><i class="fas fa-list-alt"></i>Record</div>
+        <div class="nav-item" onclick="switchTab('gas')"><i class="fas fa-fire"></i>Gas</div>
+        <div class="nav-item" onclick="switchTab('analysis')"><i class="fas fa-chart-line"></i>Analysis</div>
         <div class="nav-item" onclick="switchTab('alerts')"><i class="fas fa-bell"></i>Alerts</div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Data Structure
+        let appData = JSON.parse(localStorage.getItem('elec_app_data')) || {
+            fixedBudget: 30000,
+            meterNames: { m1: "Meter 1", m2: "Meter 2", m3: "Meter 3", m4: "Meter 4" },
+            deposits: { m1: 0, m2: 0, m3: 0, m4: 0 },
+            limits: {
+                m1: { rate: 35 },
+                m2: { rate: 35 },
+                m3: { rate: 35 },
+                m4: { rate: 100 }
+            },
+            history: []
+        };
+
+        function saveData() {
+            localStorage.setItem('elec_app_data', JSON.stringify(appData));
+            renderUI();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function saveBudget() {
+            appData.fixedBudget = parseFloat(document.getElementById('budgetInput').value) || 0;
+            closeModal('budgetModal');
+            saveData();
+        }
+
+        function saveMeterNames() {
+            appData.meterNames.m1 = document.getElementById('name_m1').value || "Meter 1";
+            appData.meterNames.m2 = document.getElementById('name_m2').value || "Meter 2";
+            appData.meterNames.m3 = document.getElementById('name_m3').value || "Meter 3";
+            appData.meterNames.m4 = document.getElementById('name_m4').value || "Meter 4";
+            closeModal('meterNamesModal');
+            saveData();
+        }
+
+        function saveLimits() {
+            let m = document.getElementById('limitMeterSelect').value;
+            appData.limits[m].rate = parseFloat(document.getElementById('unitRate').value) || 0;
+            closeModal('unitRatesModal');
+            saveData();
+        }
+
+        function saveReading() {
+            let m = document.getElementById('entryMeterSelect').value;
+            let val = parseFloat(document.getElementById('newReadingInput').value) || 0;
+            let fileInput = document.getElementById('billImgInput');
+
+            let record = {
+                meter: m,
+                reading: val,
+                date: new Date().toLocaleString(),
+                img: ""
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    record.img = e.target.result;
+                    appData.history.push(record);
+                    saveData();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                appData.history.push(record);
+                saveData();
+            }
+        }
+
+        function saveDeposit() {
+            let m = document.getElementById('depMeterSelect').value;
+            let amt = parseFloat(document.getElementById('depAmount').value) || 0;
+            appData.deposits[m] += amt;
+            saveData();
+        }
+
+        function calcGas() {
+            let diff = parseFloat(document.getElementById('hm3Diff').value) || 0;
+            let press = parseFloat(document.getElementById('pressFactor').value) || 1;
+            let gcv = parseFloat(document.getElementById('gcvRate').value) || 1;
+            let ans = (diff * press * gcv) / 281.7385;
+            document.getElementById('gasResult').innerText = ans.toFixed(4);
+        }
+
+        function downloadBackup() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+            let dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "electrical_bill_backup.json");
+            dlAnchorElem.click();
+        }
+
+        function resetData() {
+            if(confirm("Are you sure to reset all data?")) {
+                localStorage.removeItem('elec_app_data');
+                location.reload();
+            }
+        }
+
+        function renderUI() {
+            // Apply Box Labels
+            document.getElementById('lbl_m1_dep').innerText = appData.meterNames.m1;
+            document.getElementById('lbl_m2_dep').innerText = appData.meterNames.m2;
+            document.getElementById('lbl_m3_dep').innerText = appData.meterNames.m3;
+            document.getElementById('lbl_m4_dep').innerText = appData.meterNames.m4;
+
+            document.getElementById('dep_m1').innerText = appData.deposits.m1 + " RS";
+            document.getElementById('dep_m2').innerText = appData.deposits.m2 + " RS";
+            document.getElementById('dep_m3').innerText = appData.deposits.m3 + " RS";
+            document.getElementById('dep_m4').innerText = appData.deposits.m4 + " RS";
+
+            // Render History Table Without Dynamic Dropdown Names
+            let histContainer = document.getElementById('historyTableContainer');
+            histContainer.innerHTML = "";
+            let table = `<table><tr><th>Meter Code</th><th>Reading</th><th>Date</th><th>Image</th></tr>`;
+            
+            appData.history.forEach(item => {
+                let imgTag = item.img ? `<a href="${item.img}" target="_blank">View</a>` : 'No Image';
+                table += `<tr>
+                    <td>${item.meter.toUpperCase()}</td>
+                    <td>${item.reading}</td>
+                    <td>${item.date}</td>
+                    <td>${imgTag}</td>
+                </tr>`;
+            });
+            table += `</table>`;
+            histContainer.innerHTML = table;
+        }
+
+        // Initial Execution
+        renderUI();
+    </script>
 </body>
 </html>
