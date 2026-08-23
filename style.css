@@ -19,7 +19,6 @@ body {
     padding-bottom: 70px;
 }
 
-/* Top Header */
 header {
     background-color: var(--primary-color);
     color: white;
@@ -33,10 +32,9 @@ header {
 }
 
 header h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
-/* Sidebar Navigation Menu */
 .sidebar {
     position: fixed;
     top: 0;
@@ -69,6 +67,7 @@ header h1 {
     padding: 12px 10px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
+    font-size: 0.9rem;
 }
 
 .menu-item i {
@@ -77,7 +76,6 @@ header h1 {
     color: var(--primary-color);
 }
 
-/* Main Content Container */
 .container {
     padding: 15px;
     max-width: 600px;
@@ -92,7 +90,6 @@ header h1 {
     display: block;
 }
 
-/* Card Styles */
 .card {
     background: var(--card-bg);
     border-radius: 10px;
@@ -106,7 +103,37 @@ header h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    margin-bottom: 10px;
+}
+
+.meter-grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 15px;
+}
+
+.large-box-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.large-box {
+    background: #e1f5fe;
+    text-align: center;
+    border: 1px solid #b3e5fc;
+}
+
+.large-box h4 {
+    font-size: 0.85rem;
+    color: #0277bd;
+}
+
+.large-box h2 {
+    color: #01579b;
+    margin-top: 5px;
 }
 
 .meter-box {
@@ -119,8 +146,8 @@ header h1 {
 
 .meter-box h4 {
     color: var(--primary-color);
-    font-size: 0.9rem;
-    margin-bottom: 5px;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
 }
 
 .meter-box .val {
@@ -128,13 +155,28 @@ header h1 {
     color: #d32f2f;
 }
 
-/* Inputs & Form Elements */
+.meter-box-detail {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #dcdcdc;
+    font-size: 0.8rem;
+}
+
+.meter-box-detail h4 {
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+}
+
 input, select, button {
     width: 100%;
-    padding: 10px;
-    margin: 8px 0;
+    padding: 9px;
+    margin: 6px 0;
     border-radius: 5px;
     border: 1px solid #ccc;
+    font-size: 0.85rem;
 }
 
 button {
@@ -149,7 +191,6 @@ button.btn-accent {
     background-color: var(--accent-color);
 }
 
-/* Bottom Fixed Navigation Bar */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -157,7 +198,7 @@ button.btn-accent {
     background: white;
     display: flex;
     justify-content: space-around;
-    padding: 10px 0;
+    padding: 8px 0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
@@ -176,10 +217,9 @@ button.btn-accent {
 .nav-item i {
     font-size: 1.2rem;
     display: block;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
 }
 
-/* Custom Modal Replacement for Alerts */
 .modal {
     display: none;
     position: fixed;
@@ -201,16 +241,25 @@ button.btn-accent {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 0.85rem;
+    margin-top: 8px;
+    font-size: 0.75rem;
 }
 
 table, th, td {
     border: 1px solid #ddd;
-    padding: 6px;
+    padding: 5px;
     text-align: center;
 }
 
 th {
     background-color: #f2f2f2;
+}
+
+.btn-del {
+    background: #d32f2f;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    cursor: pointer;
 }
