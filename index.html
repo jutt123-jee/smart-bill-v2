@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrical Bill Record</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Smart Bill Tracker PRO</title>
     <style>
         :root {
-            --primary-color: #004d40;
-            --accent-color: #0288d1;
-            --bg-color: #f4f6f8;
+            --primary-color: #00563B;
+            --secondary-color: #0288d1;
+            --bg-color: #f4f7f6;
             --card-bg: #ffffff;
             --text-color: #333333;
+            --accent-red: #d32f2f;
         }
 
         * {
@@ -24,7 +24,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding-bottom: 70px;
+            padding-bottom: 75px;
         }
 
         header {
@@ -37,101 +37,61 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        header h1 { font-size: 1.2rem; }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: -280px;
-            width: 280px;
-            height: 100%;
-            background-color: white;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            transition: 0.3s;
-            z-index: 1000;
-            padding: 20px;
-            overflow-y: auto;
+        header h1 {
+            font-size: 1.2rem;
         }
 
-        .sidebar.active { right: 0; }
-
-        .sidebar h2 {
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-        }
-
-        .menu-item i {
-            margin-right: 12px;
-            width: 20px;
-            color: var(--primary-color);
-        }
-
-        .container {
+        .tab-content {
+            display: none;
             padding: 15px;
             max-width: 600px;
-            margin: auto;
+            margin: 0 auto;
         }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active {
+            display: block;
+        }
 
         .card {
             background: var(--card-bg);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border: 1px solid #e0e0e0;
         }
 
-        .meter-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .meter-box {
-            background: #e8f5e9;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #c8e6c9;
-        }
-
-        .meter-box h4 {
-            color: var(--primary-color);
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .meter-box .val {
+        .card-title {
+            font-size: 1.1rem;
             font-weight: bold;
-            color: #d32f2f;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 8px;
+            display: block;
         }
 
         input, select, button {
             width: 100%;
             padding: 10px;
-            margin: 8px 0;
-            border-radius: 5px;
+            margin-top: 4px;
+            margin-bottom: 8px;
             border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.9rem;
         }
 
-        button {
+        button.btn-primary {
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -139,23 +99,122 @@
             cursor: pointer;
         }
 
-        button.btn-accent { background-color: var(--accent-color); }
+        button.btn-blue {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-        .bottom-nav {
+        button.btn-danger {
+            background-color: var(--accent-red);
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 4px 8px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .meter-box {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .meter-box h4 {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .meter-box .value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-red);
+            margin: 4px 0;
+        }
+
+        .meter-box .sub-text {
+            font-size: 0.72rem;
+            color: #555;
+        }
+
+        .summary-box {
+            background: #fffde7;
+            border: 1px solid #fff59d;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .summary-box.red-box {
+            background: #ffebee;
+            border-color: #ffcdd2;
+        }
+
+        .summary-box .total-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e65100;
+        }
+
+        .flash-screen {
+            animation: flashAnim 0.5s infinite alternate;
+        }
+
+        @keyframes flashAnim {
+            from { background-color: #ffffff; }
+            to { background-color: #ff3333; }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        nav.bottom-nav {
             position: fixed;
             bottom: 0;
-            width: 100%;
+            left: 0;
+            right: 0;
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            padding: 6px 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
 
         .nav-item {
             text-align: center;
-            font-size: 0.75rem;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
             color: #666;
+            font-size: 0.7rem;
             cursor: pointer;
         }
 
@@ -164,394 +223,575 @@
             font-weight: bold;
         }
 
-        .nav-item i {
-            font-size: 1.2rem;
+        .nav-item span {
             display: block;
-            margin-bottom: 3px;
+            font-size: 1.1rem;
         }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.85rem;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-            padding: 6px;
-            text-align: center;
-        }
-
-        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <i class="fas fa-bell"></i>
-        <h1>Electrical Bill Record</h1>
-        <i class="fas fa-bars" onclick="toggleSidebar()"></i>
+        <span style="font-size: 1.3rem;">🔔</span>
+        <h1>Smart Bill Tracker PRO</h1>
+        <span style="font-size: 1.3rem;">☰</span>
     </header>
 
-    <div class="sidebar" id="sidebar">
-        <h2>سائیڈ مینو <i class="fas fa-times" onclick="toggleSidebar()"></i></h2>
-        <div class="menu-item" onclick="openModal('budgetModal')"><i class="fas fa-database"></i> 01. Data Fix (فکس بجٹ)</div>
-        <div class="menu-item" onclick="openModal('meterNamesModal')"><i class="fas fa-pen"></i> 02. Change Meter Names</div>
-        <div class="menu-item" onclick="openModal('unitRatesModal')"><i class="fas fa-sliders-h"></i> 03. Unit Rates & Limits</div>
-        <div class="menu-item" onclick="downloadBackup()"><i class="fas fa-download"></i> 04. Download Backup File</div>
-        <div class="menu-item" onclick="document.getElementById('restoreFileInput').click()"><i class="fas fa-upload"></i> 05. Restore Backup</div>
-        <div class="menu-item" onclick="window.print()"><i class="fas fa-file-export"></i> 06. Export PRO (PDF/Print)</div>
-        <div class="menu-item" onclick="switchTab('record')"><i class="fas fa-history"></i> 07. Bill History</div>
-        <div class="menu-item" onclick="resetData()"><i class="fas fa-sync" style="color:red;"></i> <span style="color:red;">08. Reset All Data</span></div>
-    </div>
+    <!-- TAB 1: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active">
+        
+        <!-- Reading Entry Box -->
+        <div class="card">
+            <div class="card-title">Reading Entry ➕</div>
+            <label>Select Meter</label>
+            <select id="entry-meter">
+                <option value="m1">Meter 1 (Ground)</option>
+                <option value="m2">Meter 2 (Above)</option>
+                <option value="m3">Meter 3 (Motor)</option>
+                <option value="gas">Gas Meter</option>
+            </select>
 
-    <!-- Hidden Input for File Restore -->
-    <input type="file" id="restoreFileInput" style="display:none;" onchange="restoreBackup(event)" accept=".json">
+            <label>New Reading</label>
+            <input type="number" id="entry-reading" placeholder="Enter new reading...">
 
-    <div class="container">
-        <!-- TAB 1: DASHBOARD -->
-        <div id="dashboard" class="tab-content active">
-            <div class="meter-grid">
-                <div class="meter-box">
-                    <h4 id="lbl_m1_dep">Meter 1 (Ground)</h4>
-                    Deposit: <br><span class="val" id="dep_m1">0 RS</span>
-                </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m2_dep">Meter 2 (above)</h4>
-                    Deposit: <br><span class="val" id="dep_m2">0 RS</span>
-                </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m3_dep">Meter 3 (Motor)</h4>
-                    Deposit: <br><span class="val" id="dep_m3">0 RS</span>
-                </div>
-                <div class="meter-box">
-                    <h4 id="lbl_m4_dep">Gas Meter</h4>
-                    Deposit: <br><span class="val" id="dep_m4">0 RS</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Dashboard Reading Entry <i class="fas fa-plus-circle"></i></h3>
-                <select id="entryMeterSelect">
-                    <option value="m1">Meter 1 (Ground)</option>
-                    <option value="m2">Meter 2 (above)</option>
-                    <option value="m3">Meter 3 (Motor)</option>
-                    <option value="m4">Gas Meter</option>
-                </select>
-                <input type="number" id="newReadingInput" placeholder="Enter new reading">
-                <input type="file" id="billImgInput" accept="image/*" style="display:none;">
-                <button type="button" class="btn-accent" onclick="document.getElementById('billImgInput').click()"><i class="fas fa-camera"></i> Upload Bill Receipt</button>
-                <button type="button" onclick="saveReading()"><i class="fas fa-save"></i> Save Reading</button>
-            </div>
-
-            <div class="card" style="text-align: center; background: #fffde7;">
-                <h4>Total Estimated Bill (All Meters):</h4>
-                <h2 style="color: #e65100;" id="totalEstBill">0 RS</h2>
-            </div>
-
-            <div class="meter-grid">
-                <div class="card" style="margin:0; text-align:center;">
-                    Total Paid:<br><b id="totalPaidVal">0 RS</b>
-                </div>
-                <div class="card" style="margin:0; text-align:center;">
-                    Fixed Budget:<br><b id="fixedBudgetVal">0 RS</b>
-                </div>
-            </div>
-
-            <div class="card" style="text-align: center; background: #e0f2f1; margin-top: 10px;">
-                Net Balance:<br><h2 id="netBalanceVal">0 RS</h2>
-            </div>
+            <button class="btn-primary" onclick="saveReading()">💾 Save Reading</button>
         </div>
 
-        <!-- TAB 2: RECORD -->
-        <div id="record" class="tab-content">
-            <div class="card">
-                <h3>Readings History & Images</h3>
-                <div id="historyTableContainer"></div>
-            </div>
-        </div>
-
-        <!-- TAB 3: GAS FORMULA -->
-        <div id="gas" class="tab-content">
-            <div class="card">
-                <h3>SNGPL Auto Gas Formula</h3>
-                <label>HM3 Difference:</label>
-                <input type="number" id="hm3Diff" value="0.00" oninput="calcGas()">
-                <label>Pressure Factor:</label>
-                <input type="number" id="pressFactor" value="1.0519" oninput="calcGas()">
-                <label>GCV Rate:</label>
-                <input type="number" id="gcvRate" value="1031" oninput="calcGas()">
-                <div style="background:#b71c1c; color:white; padding:15px; border-radius:8px; text-align:center; margin-top:10px;">
-                    Final MMBTU Result:
-                    <h2 id="gasResult">0.0000</h2>
+        <!-- Live Meters Status (4 Boxes) -->
+        <div class="card">
+            <div class="card-title">Live Meters Status</div>
+            <div class="grid-2">
+                <div class="meter-box">
+                    <h4>Meter 1 (Ground)</h4>
+                    <div class="value" id="disp-m1-val">0 RS</div>
+                    <div class="sub-text" id="disp-m1-daily">Daily: 0 Units</div>
+                    <div class="sub-text" id="disp-m1-total">Total: 0 Units</div>
+                    <div class="sub-text" id="disp-m1-time">0 Days 0 Hrs</div>
+                </div>
+                <div class="meter-box">
+                    <h4>Meter 2 (Above)</h4>
+                    <div class="value" id="disp-m2-val">0 RS</div>
+                    <div class="sub-text" id="disp-m2-daily">Daily: 0 Units</div>
+                    <div class="sub-text" id="disp-m2-total">Total: 0 Units</div>
+                    <div class="sub-text" id="disp-m2-time">0 Days 0 Hrs</div>
+                </div>
+                <div class="meter-box" style="margin-top:10px;">
+                    <h4>Meter 3 (Motor)</h4>
+                    <div class="value" id="disp-m3-val">0 RS</div>
+                    <div class="sub-text" id="disp-m3-daily">Daily: 0 Units</div>
+                    <div class="sub-text" id="disp-m3-total">Total: 0 Units</div>
+                    <div class="sub-text" id="disp-m3-time">0 Days 0 Hrs</div>
+                </div>
+                <div class="meter-box" style="margin-top:10px;">
+                    <h4>Gas Meter</h4>
+                    <div class="value" id="disp-gas-val">0 RS</div>
+                    <div class="sub-text" id="disp-gas-daily">Daily: 0 HM3</div>
+                    <div class="sub-text" id="disp-gas-total">Total: 0 HM3</div>
+                    <div class="sub-text" id="disp-gas-time">0 Days 0 Hrs</div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: ANALYSIS -->
-        <div id="analysis" class="tab-content">
-            <div class="card">
-                <h3>Bill Deposit Entry Form</h3>
-                <select id="depMeterSelect">
-                    <option value="m1">Meter 1</option>
-                    <option value="m2">Meter 2</option>
-                    <option value="m3">Meter 3</option>
-                    <option value="m4">Gas Meter</option>
-                </select>
-                <input type="number" id="depAmount" placeholder="Write amount paid">
-                <button onclick="saveDeposit()">Save Deposit</button>
+        <!-- Bill Status Box -->
+        <div class="card">
+            <div class="card-title">Bill Paid Status</div>
+            <div class="grid-2">
+                <div>
+                    <label>Meter 1 Paid</label>
+                    <input type="number" id="paid-m1" value="0" onchange="updateSummary()">
+                    <input type="month" id="month-m1">
+                </div>
+                <div>
+                    <label>Meter 2 Paid</label>
+                    <input type="number" id="paid-m2" value="0" onchange="updateSummary()">
+                    <input type="month" id="month-m2">
+                </div>
+                <div>
+                    <label>Meter 3 Paid</label>
+                    <input type="number" id="paid-m3" value="0" onchange="updateSummary()">
+                    <input type="month" id="month-m3">
+                </div>
+                <div>
+                    <label>Gas Meter Paid</label>
+                    <input type="number" id="paid-gas" value="0" onchange="updateSummary()">
+                    <input type="month" id="month-gas">
+                </div>
             </div>
         </div>
 
-        <!-- TAB 5: ALERTS -->
-        <div id="alerts" class="tab-content">
-            <div class="card">
-                <h3>Alerts & Limits</h3>
-                <p>Status: <b style="color:green;">System Active</b></p>
+        <!-- Financial Summary -->
+        <div class="card">
+            <div class="card-title">Financial Balance</div>
+            <div class="grid-2">
+                <div>
+                    <label>Total Paid (Home)</label>
+                    <input type="number" id="home-paid-total" value="0" readonly>
+                </div>
+                <div>
+                    <label>Fixed Balance / Budget</label>
+                    <input type="number" id="fixed-budget" value="20000" onchange="updateSummary()">
+                </div>
+            </div>
+            <div class="summary-box red-box">
+                <div>صافی بیل / فائنل بیل (Safi Balance)</div>
+                <div class="total-amount" id="safi-balance">0 RS</div>
+            </div>
+            <div class="summary-box">
+                <div>Total Estimated Bill (With Fixed Amount)</div>
+                <div class="total-amount" id="grand-total-bill">0 RS</div>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal" id="budgetModal">
-        <div class="modal-content">
-            <h3>Fix Budget Setting</h3>
-            <input type="number" id="budgetInput" placeholder="Enter Fixed Budget">
-            <button onclick="saveBudget()">Save</button>
-            <button style="background:#777;" onclick="closeModal('budgetModal')">Cancel</button>
+    <!-- TAB 2: GAS METER -->
+    <div id="tab-gas" class="tab-content">
+        <div class="card">
+            <div class="card-title">Gas Reading Calculator</div>
+            <label>Current Reading (HM3)</label>
+            <input type="number" id="gas-tab-curr" placeholder="Enter current reading">
+            <label>Previous Reading (HM3)</label>
+            <input type="number" id="gas-tab-prev" placeholder="Enter previous reading">
+            
+            <div class="summary-box">
+                <div>Difference (استعمال شدہ HM3)</div>
+                <div class="total-amount" id="gas-tab-diff">0 HM3</div>
+            </div>
+
+            <label>Gas Rate per HM3 (RS)</label>
+            <input type="number" id="gas-tab-rate" value="100">
+            
+            <button class="btn-primary" onclick="calcGasTab()">Calculate Result</button>
+            
+            <div class="summary-box red-box" style="margin-top:10px;">
+                <div>Total Calculated Gas Bill</div>
+                <div class="total-amount" id="gas-tab-result">0 RS</div>
+            </div>
         </div>
     </div>
 
-    <div class="modal" id="meterNamesModal">
-        <div class="modal-content">
-            <h3>Change Meter Names</h3>
-            <input type="text" id="name_m1" placeholder="Meter 1 Name">
-            <input type="text" id="name_m2" placeholder="Meter 2 Name">
-            <input type="text" id="name_m3" placeholder="Meter 3 Name">
-            <input type="text" id="name_m4" placeholder="Meter 4 Name">
-            <button onclick="saveMeterNames()">Save Names</button>
-            <button style="background:#777;" onclick="closeModal('meterNamesModal')">Cancel</button>
-        </div>
-    </div>
+    <!-- TAB 3: RECORD -->
+    <div id="tab-record" class="tab-content">
+        <div class="card">
+            <div class="card-title">Meter Limits & Rate Settings ⚙️</div>
+            <label>Select Meter</label>
+            <select id="setting-meter">
+                <option value="m1">Meter 1 (Ground)</option>
+                <option value="m2">Meter 2 (Above)</option>
+                <option value="m3">Meter 3 (Motor)</option>
+                <option value="gas">Gas Meter</option>
+            </select>
+            
+            <div class="grid-2">
+                <div>
+                    <label>Daily Limit Units</label>
+                    <input type="number" id="set-daily-limit" value="10">
+                </div>
+                <div>
+                    <label>Total Limit Units</label>
+                    <input type="number" id="set-total-limit" value="300">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <label>Per Unit Rate (RS)</label>
+                    <input type="number" id="set-rate" value="35">
+                </div>
+                <div>
+                    <label>Due Date & Time</label>
+                    <input type="datetime-local" id="set-due-date">
+                </div>
+            </div>
 
-    <div class="modal" id="unitRatesModal">
-        <div class="modal-content">
-            <h3>Unit Rates & Limits</h3>
-            <select id="limitMeterSelect">
+            <label>Alert Voice Text</label>
+            <input type="text" id="set-alert-msg" placeholder="مثال: میٹر 1 کی لمٹ ختم ہو گئی ہے">
+
+            <button class="btn-blue" onclick="saveMeterSettings()">Save Settings</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Add Previous Reading (Manual)</div>
+            <label>Select Meter</label>
+            <select id="prev-meter-select">
                 <option value="m1">Meter 1</option>
                 <option value="m2">Meter 2</option>
                 <option value="m3">Meter 3</option>
-                <option value="m4">Gas Meter</option>
+                <option value="gas">Gas Meter</option>
             </select>
-            <input type="number" id="unitRate" placeholder="Per Unit Rate (RS)">
-            <button onclick="saveLimits()">Save Rates</button>
-            <button style="background:#777;" onclick="closeModal('unitRatesModal')">Cancel</button>
+            <label>Previous Reading Value</label>
+            <input type="number" id="prev-reading-val" placeholder="Enter previous value">
+            <label>Date / Time</label>
+            <input type="datetime-local" id="prev-reading-date">
+            <button class="btn-primary" onclick="addPreviousReading()">Add to Table</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Readings History Table</div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Old</th>
+                            <th>New</th>
+                            <th>Unit</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="record-table-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-box" style="margin-top:10px;">
+                <div id="table-summary-text">Daily: 0 | Total: 0 Units | Total Bill: 0 RS</div>
+            </div>
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('dashboard')"><i class="fas fa-tachometer-alt"></i>Dashboard</div>
-        <div class="nav-item" onclick="switchTab('record')"><i class="fas fa-list-alt"></i>Record</div>
-        <div class="nav-item" onclick="switchTab('gas')"><i class="fas fa-fire"></i>Gas</div>
-        <div class="nav-item" onclick="switchTab('analysis')"><i class="fas fa-chart-line"></i>Analysis</div>
-        <div class="nav-item" onclick="switchTab('alerts')"><i class="fas fa-bell"></i>Alerts</div>
+    <!-- TAB 4: ANALYSIS -->
+    <div id="tab-analysis" class="tab-content">
+        <div class="card">
+            <div class="card-title">Bill Payment Entry</div>
+            <label>Select Meter</label>
+            <select id="ana-meter">
+                <option value="m1">Meter 1 (Ground)</option>
+                <option value="m2">Meter 2 (Above)</option>
+                <option value="m3">Meter 3 (Motor)</option>
+                <option value="gas">Gas Meter</option>
+            </select>
+            <label>Bill Amount Paid</label>
+            <input type="number" id="ana-amount" placeholder="Enter amount">
+            <label>Paid From</label>
+            <select id="ana-source">
+                <option value="Ghar">Ghar Say Paid (Home)</option>
+                <option value="Bahir">Bahir Say Paid (Outside)</option>
+            </select>
+            <label>Bill Month & Date</label>
+            <input type="month" id="ana-month">
+            <button class="btn-primary" onclick="saveAnalysisPayment()">Save Payment</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Payment History Table</div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Meter</th>
+                            <th>Amount</th>
+                            <th>Source</th>
+                            <th>Month</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ana-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Bill Difference & Comparison 📊</div>
+            <div id="bill-diff-box" class="summary-box">
+                پچھلے بل اور نئے بل کا فرق یہاں ظاہر ہوگا۔
+            </div>
+        </div>
     </div>
 
+    <!-- TAB 5: ALERTS -->
+    <div id="tab-alerts" class="tab-content">
+        <div class="card">
+            <div class="card-title">System Alert & Complaint Center</div>
+            <label>Complain / Notification Text</label>
+            <input type="text" id="complaint-text" placeholder="Write complaint here...">
+            <button class="btn-primary" onclick="triggerAlert()">📢 Submit & Alert Test</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Active Notifications</div>
+            <div id="alerts-list">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('dashboard', this)">
+            <span>⏱</span>Dashboard
+        </button>
+        <button class="nav-item" onclick="switchTab('gas', this)">
+            <span>🔥</span>Gas Meter
+        </button>
+        <button class="nav-item" onclick="switchTab('record', this)">
+            <span>📋</span>Record
+        </button>
+        <button class="nav-item" onclick="switchTab('analysis', this)">
+            <span>📈</span>Analysis
+        </button>
+        <button class="nav-item" onclick="switchTab('alerts', this)">
+            <span>🔔</span>Alerts
+        </button>
+    </nav>
+
+    <!-- JavaScript Logic -->
     <script>
-        let appData = JSON.parse(localStorage.getItem('elec_app_data')) || {
-            fixedBudget: 30000,
-            meterNames: { m1: "Meter 1 (Ground)", m2: "Meter 2 (above)", m3: "Meter 3 (Motor)", m4: "Gas Meter" },
-            deposits: { m1: 0, m2: 0, m3: 0, m4: 0 },
-            limits: {
-                m1: { rate: 35 },
-                m2: { rate: 35 },
-                m3: { rate: 35 },
-                m4: { rate: 100 }
+        let store = JSON.parse(localStorage.getItem('smart_bill_v2')) || {
+            readings: [],
+            settings: {
+                m1: { dailyLimit: 10, totalLimit: 300, rate: 35, dueDate: '', alertMsg: 'میٹر 1 کی حد ختم ہو چکی ہے' },
+                m2: { dailyLimit: 10, totalLimit: 300, rate: 35, dueDate: '', alertMsg: 'میٹر 2 کی حد ختم ہو چکی ہے' },
+                m3: { dailyLimit: 10, totalLimit: 300, rate: 35, dueDate: '', alertMsg: 'میٹر 3 کی حد ختم ہو چکی ہے' },
+                gas: { dailyLimit: 1, totalLimit: 10, rate: 100, dueDate: '', alertMsg: 'گیس میٹر کی حد ختم ہو چکی ہے' }
             },
-            history: []
+            payments: []
         };
 
         function saveData() {
-            localStorage.setItem('elec_app_data', JSON.stringify(appData));
-            renderUI();
+            localStorage.setItem('smart_bill_v2', JSON.stringify(store));
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(document.getElementById('sidebar').classList.contains('active')) {
-                toggleSidebar();
-            }
-        }
-
-        function openModal(id) {
-            document.getElementById(id).style.display = 'flex';
-            toggleSidebar();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        function saveBudget() {
-            appData.fixedBudget = parseFloat(document.getElementById('budgetInput').value) || 0;
-            closeModal('budgetModal');
-            saveData();
-        }
-
-        function saveMeterNames() {
-            appData.meterNames.m1 = document.getElementById('name_m1').value || appData.meterNames.m1;
-            appData.meterNames.m2 = document.getElementById('name_m2').value || appData.meterNames.m2;
-            appData.meterNames.m3 = document.getElementById('name_m3').value || appData.meterNames.m3;
-            appData.meterNames.m4 = document.getElementById('name_m4').value || appData.meterNames.m4;
-            closeModal('meterNamesModal');
-            saveData();
-        }
-
-        function saveLimits() {
-            let m = document.getElementById('limitMeterSelect').value;
-            appData.limits[m].rate = parseFloat(document.getElementById('unitRate').value) || 0;
-            closeModal('unitRatesModal');
-            saveData();
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
         }
 
         function saveReading() {
-            let m = document.getElementById('entryMeterSelect').value;
-            let val = parseFloat(document.getElementById('newReadingInput').value) || 0;
-            let fileInput = document.getElementById('billImgInput');
+            const meter = document.getElementById('entry-meter').value;
+            const newVal = parseFloat(document.getElementById('entry-reading').value);
 
-            if(!val) { alert("Please enter a valid reading!"); return; }
-
-            let record = {
-                meter: m,
-                reading: val,
-                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                img: ""
-            };
-
-            if (fileInput.files && fileInput.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function (e) {
-                    record.img = e.target.result;
-                    appData.history.push(record);
-                    document.getElementById('newReadingInput').value = '';
-                    saveData();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                appData.history.push(record);
-                document.getElementById('newReadingInput').value = '';
-                saveData();
+            if (!newVal && newVal !== 0) {
+                alert("براہ کرم صحیح ریڈنگ درج کریں!");
+                return;
             }
-        }
 
-        function saveDeposit() {
-            let m = document.getElementById('depMeterSelect').value;
-            let amt = parseFloat(document.getElementById('depAmount').value) || 0;
-            appData.deposits[m] += amt;
-            document.getElementById('depAmount').value = '';
-            saveData();
-            alert("Deposit Saved!");
-        }
-
-        function calcGas() {
-            let diff = parseFloat(document.getElementById('hm3Diff').value) || 0;
-            let press = parseFloat(document.getElementById('pressFactor').value) || 1;
-            let gcv = parseFloat(document.getElementById('gcvRate').value) || 1;
-            let ans = (diff * press * gcv) / 281.7385;
-            document.getElementById('gasResult').innerText = ans.toFixed(4);
-        }
-
-        function downloadBackup() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            let dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "electrical_bill_backup.json");
-            dlAnchorElem.click();
-        }
-
-        function restoreBackup(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    appData = JSON.parse(e.target.result);
-                    saveData();
-                    alert("Backup Restored Successfully!");
-                } catch(err) {
-                    alert("Invalid Backup File!");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function resetData() {
-            if(confirm("Are you sure to reset all data?")) {
-                localStorage.removeItem('elec_app_data');
-                location.reload();
-            }
-        }
-
-        function renderUI() {
-            document.getElementById('lbl_m1_dep').innerText = appData.meterNames.m1;
-            document.getElementById('lbl_m2_dep').innerText = appData.meterNames.m2;
-            document.getElementById('lbl_m3_dep').innerText = appData.meterNames.m3;
-            document.getElementById('lbl_m4_dep').innerText = appData.meterNames.m4;
-
-            document.getElementById('dep_m1').innerText = appData.deposits.m1 + " RS";
-            document.getElementById('dep_m2').innerText = appData.deposits.m2 + " RS";
-            document.getElementById('dep_m3').innerText = appData.deposits.m3 + " RS";
-            document.getElementById('dep_m4').innerText = appData.deposits.m4 + " RS";
-
-            let totalPaid = appData.deposits.m1 + appData.deposits.m2 + appData.deposits.m3 + appData.deposits.m4;
-            document.getElementById('totalPaidVal').innerText = totalPaid + " RS";
-            document.getElementById('fixedBudgetVal').innerText = appData.fixedBudget + " RS";
-
-            let netBalance = appData.fixedBudget - totalPaid;
-            document.getElementById('netBalanceVal').innerText = netBalance + " RS";
-
-            let histContainer = document.getElementById('historyTableContainer');
-            let table = `<table><tr><th>Meter</th><th>Reading</th><th>Date</th><th>Image</th></tr>`;
+            const list = store.readings.filter(r => r.meter === meter);
+            const lastEntry = list.length > 0 ? list[list.length - 1] : null;
             
-            appData.history.slice().reverse().forEach(item => {
-                let imgTag = item.img ? `<a href="${item.img}" target="_blank">View Image</a>` : 'No Image';
-                table += `<tr>
-                    <td>${appData.meterNames[item.meter] || item.meter}</td>
-                    <td>${item.reading}</td>
-                    <td>${item.date}</td>
-                    <td>${imgTag}</td>
-                </tr>`;
-            });
-            table += `</table>`;
-            histContainer.innerHTML = table;
+            const oldVal = lastEntry ? lastEntry.newVal : 0;
+            const units = oldVal ? (newVal - oldVal) : 0;
+            const now = new Date();
+
+            const entry = {
+                id: Date.now(),
+                meter: meter,
+                oldVal: oldVal,
+                newVal: newVal,
+                units: units > 0 ? units : 0,
+                timestamp: now.getTime(),
+                dateStr: now.toLocaleString()
+            };
+
+            store.readings.push(entry);
+            saveData();
+            checkLimitsAndAlert(meter, units);
+            updateUI();
+            document.getElementById('entry-reading').value = '';
+            alert("ریڈنگ کامیابی سے ٹیبل اور ڈیش بورڈ میں شامل ہو گئی!");
         }
 
-        renderUI();
+        function addPreviousReading() {
+            const meter = document.getElementById('prev-meter-select').value;
+            const val = parseFloat(document.getElementById('prev-reading-val').value);
+            const dateInput = document.getElementById('prev-reading-date').value;
+
+            if (!val && val !== 0) return;
+
+            const time = dateInput ? new Date(dateInput).getTime() : Date.now();
+            const dateStr = dateInput ? new Date(dateInput).toLocaleString() : new Date().toLocaleString();
+
+            store.readings.push({
+                id: Date.now(),
+                meter: meter,
+                oldVal: 0,
+                newVal: val,
+                units: 0,
+                timestamp: time,
+                dateStr: dateStr + " (Manual)"
+            });
+
+            saveData();
+            updateUI();
+            document.getElementById('prev-reading-val').value = '';
+            alert("پرانی ریڈنگ کا ریکارڈ شامل کر دیا گیا!");
+        }
+
+        function calcGasTab() {
+            const curr = parseFloat(document.getElementById('gas-tab-curr').value) || 0;
+            const prev = parseFloat(document.getElementById('gas-tab-prev').value) || 0;
+            const rate = parseFloat(document.getElementById('gas-tab-rate').value) || 100;
+
+            const diff = curr - prev > 0 ? (curr - prev) : 0;
+            const totalBill = diff * rate;
+
+            document.getElementById('gas-tab-diff').innerText = diff.toFixed(3) + " HM3";
+            document.getElementById('gas-tab-result').innerText = totalBill.toFixed(2) + " RS";
+        }
+
+        function saveMeterSettings() {
+            const meter = document.getElementById('setting-meter').value;
+            store.settings[meter] = {
+                dailyLimit: parseFloat(document.getElementById('set-daily-limit').value) || 0,
+                totalLimit: parseFloat(document.getElementById('set-total-limit').value) || 0,
+                rate: parseFloat(document.getElementById('set-rate').value) || 0,
+                dueDate: document.getElementById('set-due-date').value,
+                alertMsg: document.getElementById('set-alert-msg').value || "حد ختم ہو گئی ہے"
+            };
+            saveData();
+            updateUI();
+            alert("میٹر سیٹنگز محفوظ ہو گئی ہیں!");
+        }
+
+        function saveAnalysisPayment() {
+            const meter = document.getElementById('ana-meter').value;
+            const amount = parseFloat(document.getElementById('ana-amount').value) || 0;
+            const source = document.getElementById('ana-source').value;
+            const month = document.getElementById('ana-month').value;
+
+            if (!amount) return;
+
+            store.payments.push({ id: Date.now(), meter: meter, amount: amount, source: source, month: month });
+            saveData();
+            updateUI();
+            document.getElementById('ana-amount').value = '';
+            alert("پیمنٹ کا ریکارڈ درج ہو گیا!");
+        }
+
+        function triggerAlert(customText) {
+            const txt = customText || document.getElementById('complaint-text').value || "انتباہ! لمٹ کراس ہو چکی ہے!";
+
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(txt);
+                window.speechSynthesis.speak(msg);
+            }
+
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500, 200, 500]);
+            }
+
+            document.body.classList.add('flash-screen');
+            setTimeout(() => {
+                document.body.classList.remove('flash-screen');
+            }, 3000);
+
+            alert("🔔 ALERT: " + txt);
+        }
+
+        function checkLimitsAndAlert(meter, unitsAdded) {
+            const set = store.settings[meter];
+            if (!set) return;
+
+            if (unitsAdded > set.dailyLimit || unitsAdded > set.totalLimit) {
+                triggerAlert(set.alertMsg);
+            }
+        }
+
+        function updateUI() {
+            const meters = ['m1', 'm2', 'm3', 'gas'];
+            let grandEstimatedTotal = 0;
+
+            meters.forEach(m => {
+                const list = store.readings.filter(r => r.meter === m).sort((a,b) => a.timestamp - b.timestamp);
+                const set = store.settings[m] || { rate: 35 };
+
+                let totalUnits = 0;
+                let days = 0, hours = 0;
+
+                if (list.length > 0) {
+                    const firstTime = list[0].timestamp;
+                    const lastTime = list[list.length - 1].timestamp;
+                    const diffMs = lastTime - firstTime;
+
+                    days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                    const firstVal = list[0].newVal;
+                    const lastVal = list[list.length - 1].newVal;
+                    totalUnits = lastVal - firstVal > 0 ? (lastVal - firstVal) : 0;
+                }
+
+                const lastEntry = list.length > 0 ? list[list.length - 1] : { units: 0 };
+                const dailyUnits = lastEntry.units;
+                const meterBill = totalUnits * set.rate;
+                grandEstimatedTotal += meterBill;
+
+                const valEl = document.getElementById(`disp-${m}-val`);
+                const dailyEl = document.getElementById(`disp-${m}-daily`);
+                const totalEl = document.getElementById(`disp-${m}-total`);
+                const timeEl = document.getElementById(`disp-${m}-time`);
+
+                if (valEl) valEl.innerText = `${meterBill.toFixed(0)} RS`;
+                if (dailyEl) dailyEl.innerText = `Daily: ${dailyUnits} ${m === 'gas' ? 'HM3' : 'Units'}`;
+                if (totalEl) totalEl.innerText = `Total: ${totalUnits} ${m === 'gas' ? 'HM3' : 'Units'}`;
+                if (timeEl) timeEl.innerText = `${days} Days ${hours} Hrs`;
+            });
+
+            const p1 = parseFloat(document.getElementById('paid-m1').value) || 0;
+            const p2 = parseFloat(document.getElementById('paid-m2').value) || 0;
+            const p3 = parseFloat(document.getElementById('paid-m3').value) || 0;
+            const pGas = parseFloat(document.getElementById('paid-gas').value) || 0;
+
+            const totalHomePaid = p1 + p2 + p3 + pGas;
+            document.getElementById('home-paid-total').value = totalHomePaid;
+
+            const fixedBudget = parseFloat(document.getElementById('fixed-budget').value) || 0;
+            const safiBalance = fixedBudget - grandEstimatedTotal;
+
+            document.getElementById('safi-balance').innerText = `${safiBalance.toFixed(0)} RS`;
+            document.getElementById('grand-total-bill').innerText = `${(grandEstimatedTotal + fixedBudget).toFixed(0)} RS`;
+
+            const recordBody = document.getElementById('record-table-body');
+            recordBody.innerHTML = '';
+            store.readings.slice().reverse().forEach(r => {
+                recordBody.innerHTML += `
+                    <tr>
+                        <td>${r.dateStr}</td>
+                        <td>${r.oldVal}</td>
+                        <td>${r.newVal}</td>
+                        <td>${r.units}</td>
+                        <td><button class="btn-danger" onclick="deleteReading(${r.id})">Del</button></td>
+                    </tr>
+                `;
+            });
+
+            const anaBody = document.getElementById('ana-table-body');
+            anaBody.innerHTML = '';
+            store.payments.slice().reverse().forEach(p => {
+                anaBody.innerHTML += `
+                    <tr>
+                        <td>${p.meter.toUpperCase()}</td>
+                        <td>${p.amount} RS</td>
+                        <td>${p.source}</td>
+                        <td>${p.month}</td>
+                    </tr>
+                `;
+            });
+
+            if (store.payments.length >= 2) {
+                const last = store.payments[store.payments.length - 1];
+                const prev = store.payments[store.payments.length - 2];
+                const diff = last.amount - prev.amount;
+                document.getElementById('bill-diff-box').innerHTML = `
+                    <strong>${last.month}</strong> کے بل میں پچھلے مہینے (<strong>${prev.month}</strong>) کی نسبت 
+                    <span style="color:${diff > 0 ? 'red' : 'green'}; font-weight:bold;">
+                        ${Math.abs(diff)} RS ${diff > 0 ? 'زیادہ' : 'کم'}
+                    </span> بل آیا ہے۔
+                `;
+            }
+        }
+
+        function updateSummary() {
+            updateUI();
+        }
+
+        function deleteReading(id) {
+            store.readings = store.readings.filter(r => r.id !== id);
+            saveData();
+            updateUI();
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
